@@ -1,15 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db'); 
+const authenticateToken = require("../middleware/auth"); // Το βάζουμε και εδώ!
+
+// Προστατεύουμε όλες τις διαδρομές των groups (μόνο συνδεδεμένοι χρήστες)
+router.use(authenticateToken);
 
 // --- 1. ΔΗΜΙΟΥΡΓΙΑ ΝΕΑΣ ΠΑΡΕΑΣ (Session) ---
 router.post('/create', async (req, res) => {
-    // Πλέον παίρνουμε και τα στοιχεία του ραντάρ!
-    const { hostId, isPublic, lobbyName, lobbyType, lobbyLocation } = req.body;
+    // ΣΒΗΣΑΜΕ το hostId από το body. Το παίρνουμε με ασφάλεια από το token (req.user.id)
+    const { isPublic, lobbyName, lobbyType, lobbyLocation } = req.body;
+    const hostId = req.user.id; 
     const pin = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     try {
-        const publicFlag = isPublic ? 1 : 0; // 1 = Ανοιχτό, 0 = Κλειστό (Private)
+        const publicFlag = isPublic ? 1 : 0;
         
         await db.query(
             'INSERT INTO group_sessions (session_id, host_id, is_public, name, type, location) VALUES (?, ?, ?, ?, ?, ?)', 
@@ -18,7 +23,8 @@ router.post('/create', async (req, res) => {
         res.json({ success: true, pin });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Αποτυχία δημιουργίας session' });
+        // Ενιαίο Error Handling (Βήμα 3)
+        res.status(500).json({ error: 'Αποτυχία δημιουργίας session', details: error.message });
     }
 });
 
@@ -26,7 +32,6 @@ router.post('/create', async (req, res) => {
 // --- 1.5 ΕΥΡΕΣΗ ΑΝΟΙΧΤΩΝ LOBBIES ΓΙΑ ΤΟ ΡΑΝΤΑΡ ---
 router.get('/active', async (req, res) => {
     try {
-        // Ψάχνουμε ΜΟΝΟ τα ανοιχτά (is_public = 1) και μετράμε πόσα άτομα ψήφισαν ήδη
         const [lobbies] = await db.query(`
             SELECT 
                 s.session_id as pin, 
@@ -43,29 +48,26 @@ router.get('/active', async (req, res) => {
         res.json(lobbies);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Αποτυχία φόρτωσης ανοιχτών lobbies' });
+        res.status(500).json({ error: 'Αποτυχία φόρτωσης ανοιχτών lobbies', details: error.message });
     }
 });
 
 // --- 2. ΨΗΦΟΦΟΡΙΑ & ΕΛΕΓΧΟΣ MATCH (Δυναμικός Αλγόριθμος) ---
 router.post('/vote', async (req, res) => {
-    const { sessionId, userId, activityId, voteType } = req.body;
+    // ΣΒΗΣΑΜΕ το userId από το body!
+    const { sessionId, activityId, voteType } = req.body;
+    const userId = req.user.id; // Το παίρνουμε από το token
     
-    // 1. ΜΗΔΕΝΙΣΜΟΣ: Κάθε φορά που κάποιος ψηφίζει, ξεκινάμε με το match στο false!
     let isMatch = false; 
     
     try {
-      // 2. Αποθήκευση της ψήφου στη βάση (Αν υπάρχει ήδη, την κάνει Update)
         await db.query(`
             INSERT INTO group_votes (session_id, user_id, activity_id, vote_type) 
             VALUES (?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE vote_type = ?
         `, [sessionId, userId, activityId, voteType, voteType]);
 
-        // 3. Ελέγχουμε για Match ΜΟΝΟ αν η ψήφος ήταν 'like'
         if (voteType === 'like') {
-            
-            // Α) Πόσα άτομα ψηφίζουν συνολικά σε αυτό το PIN;
             const [totalUsersRes] = await db.query(`
                 SELECT COUNT(DISTINCT user_id) as totalUsers 
                 FROM group_votes 
@@ -73,7 +75,6 @@ router.post('/vote', async (req, res) => {
             `, [sessionId]);
             const totalUsers = totalUsersRes[0].totalUsers;
 
-            // Β) Πόσα "Like" έχει πάρει η ΣΥΓΚΕΚΡΙΜΕΝΗ δραστηριότητα;
             const [likesRes] = await db.query(`
                 SELECT COUNT(*) as totalLikes 
                 FROM group_votes 
@@ -81,19 +82,16 @@ router.post('/vote', async (req, res) => {
             `, [sessionId, activityId]);
             const totalLikes = likesRes[0].totalLikes;
 
-            // Γ) ΟΜΟΦΩΝΙΑ: Πρέπει να υπάρχουν πάνω από 1 άτομα ΣΥΝΟΛΙΚΑ στο δωμάτιο 
-            // (για να μην βγάζει match όταν είσαι μόνος σου) ΚΑΙ όλοι να πάτησαν Like!
             if (totalUsers > 1 && totalLikes === totalUsers) { 
                 isMatch = true;
             }
         }
         
-        // 4. Επιστροφή αποτελέσματος στο Frontend
         res.json({ success: true, match: isMatch });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Σφάλμα κατά την ψήφο' });
+        res.status(500).json({ error: 'Σφάλμα κατά την ψήφο', details: error.message });
     }
 });
 
@@ -110,11 +108,11 @@ router.get('/session-summary/:sessionId', async (req, res) => {
         `, [sessionId]);
         res.json(summary);
     } catch (error) {
-        res.status(500).json({ error: 'Fail' });
+        res.status(500).json({ error: 'Αποτυχία φόρτωσης σύνοψης', details: error.message });
     }
 });
 
-// --- 4. ΠΛΗΡΟΦΟΡΙΕΣ LOBBY (ΓΙΑ ΤΟΝ ΤΙΤΛΟ ΣΤΟ CHAT) ---
+// --- 4. ΠΛΗΡΟΦΟΡΙΕΣ LOBBY ---
 router.get('/info/:pin', async (req, res) => {
     try {
         const [lobby] = await db.query(
@@ -123,14 +121,13 @@ router.get('/info/:pin', async (req, res) => {
         );
         
         if (lobby.length > 0) {
-            // Το επιστρέφουμε ως "title" για να ταιριάζει με το Frontend
             res.json({ title: lobby[0].name }); 
         } else {
             res.status(404).json({ error: 'Το Lobby δεν βρέθηκε' });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Σφάλμα κατά την αναζήτηση πληροφοριών' });
+        res.status(500).json({ error: 'Σφάλμα κατά την αναζήτηση πληροφοριών', details: error.message });
     }
 });
 
