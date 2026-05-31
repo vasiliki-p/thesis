@@ -5,7 +5,8 @@ const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
 
-const authRoutes = require('./middleware/auth');
+// --- 1. ROUTES ---
+const authRoutes = require('./routes/auth'); // Το ΣΩΣΤΟ αρχείο για login/register
 const activitiesRoutes = require('./routes/activities');
 const reviewsRoutes = require('./routes/reviews');
 const aiRoutes = require('./routes/ai'); 
@@ -14,6 +15,8 @@ const favouritesRoute = require("./routes/favourites");
 const groupRoutes = require('./routes/group');
 const historyRoute = require('./routes/history');
 
+// --- 2. MIDDLEWARE ΑΣΦΑΛΕΙΑΣ ---
+const authenticateToken = require('./middleware/auth'); // Το φίλτρο για τα tokens
 
 const db = require('./db');
 
@@ -34,7 +37,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- 1. DATA STORAGE ΓΙΑ ΤΑ LOBBIES ---
+// --- 3. DATA STORAGE ΓΙΑ ΤΑ LOBBIES ---
 // Αυτό κρατάει τους χρήστες που είναι online ανά δραστηριότητα
 let publicLobbies = {}; 
 
@@ -45,7 +48,6 @@ app.get('/api/lobbies/active', (req, res) => {
         .map(id => ({
             activityId: id,
             members: publicLobbies[id], // Επιστρέφει array με {id, name}
-            // Εδώ κανονικά θα έκανες ένα query στη DB για το όνομα της δραστηριότητας
             activityTitle: "Δραστηριότητα #" + id 
         }));
     res.json(active);
@@ -55,6 +57,7 @@ app.get('/api/lobby/:activityId', (req, res) => {
     const members = publicLobbies[req.params.activityId] || [];
     res.json(members);
 });
+
 app.get('/api/lobby/messages/:activityId', async (req, res) => {
     try {
         const [rows] = await db.query(
@@ -67,10 +70,12 @@ app.get('/api/lobby/messages/:activityId', async (req, res) => {
     }
 });
 
-app.post('/api/lobby/join', (req, res) => {
-    const { activityId, userId, userName } = req.body;
+// ✅ ΚΛΕΙΔΩΜΕΝΟ ROUTE: Χρησιμοποιεί πλέον το authenticateToken
+app.post('/api/lobby/join', authenticateToken, (req, res) => {
+    const { activityId, userName } = req.body; // Σβήσαμε το userId από εδώ
+    const userId = req.user.id; // Το παίρνουμε με ασφάλεια από το Token!
     
-    if (!activityId || activityId === "undefined" || !userId) {
+    if (!activityId || activityId === "undefined") {
         return res.status(400).json({ error: "Missing or Invalid Activity ID" });
     }
 
@@ -78,7 +83,7 @@ app.post('/api/lobby/join', (req, res) => {
         publicLobbies[activityId] = [];
     }
     
-    // ΔΙΟΡΘΩΣΗ: Μετατρέπουμε τα ID σε String για ασφαλή σύγκριση
+    // Μετατρέπουμε τα ID σε String για ασφαλή σύγκριση
     const exists = publicLobbies[activityId].find(u => String(u.id) === String(userId));
     if (!exists) {
         publicLobbies[activityId].push({ 
@@ -92,6 +97,7 @@ app.post('/api/lobby/join', (req, res) => {
     res.json({ success: true, members: publicLobbies[activityId] });
 });
 
+// --- 4. SOCKET.IO (Real-time Chat) ---
 io.on('connection', (socket) => {
 
     socket.on("join-lobby", ({ activityId, userId, userName }) => {
@@ -99,13 +105,13 @@ io.on('connection', (socket) => {
 
         socket.join(`lobby_${activityId}`);
         socket.currentLobby = activityId;
-        // ΔΙΟΡΘΩΣΗ: Το σώζουμε στο socket πάντα ως String
+        // Το σώζουμε στο socket πάντα ως String
         socket.userId = String(userId); 
 
         if (!publicLobbies[activityId]) publicLobbies[activityId] = [];
 
         setTimeout(() => {
-            // ΔΙΟΡΘΩΣΗ: Καθαρισμός διπλότυπων με σύγκριση String
+            // Καθαρισμός διπλότυπων με σύγκριση String
             publicLobbies[activityId] = publicLobbies[activityId].filter(u => String(u.id) !== String(userId));
             
             // Προσθήκη χρήστη στη λίστα
@@ -118,7 +124,8 @@ io.on('connection', (socket) => {
             });
         }, 100);
     });
-socket.on("leave-lobby", ({ activityId, userId }) => {
+
+    socket.on("leave-lobby", ({ activityId, userId }) => {
         if (publicLobbies[activityId]) {
             // 1. Βρίσκουμε ποιος χρήστης φεύγει για να τυπώσουμε το μήνυμα
             const userLeaving = publicLobbies[activityId].find(u => String(u.id) === String(userId));
@@ -140,13 +147,11 @@ socket.on("leave-lobby", ({ activityId, userId }) => {
         }
     });
 
-
     socket.on("send-message", async (data) => {
+        // Προώθηση σε όλους
+        io.to(`lobby_${data.activityId}`).emit("receive-message", data);
         
-            // Προώθηση σε όλους
-            io.to(`lobby_${data.activityId}`).emit("receive-message", data);
-            
-            try {
+        try {
             // Αποθήκευση στη βάση
             await db.query(
                 "INSERT INTO lobby_messages (activity_id, user_id, user_name, message_text) VALUES (?, ?, ?, ?)",
@@ -157,7 +162,7 @@ socket.on("leave-lobby", ({ activityId, userId }) => {
         }
     });
 
-        socket.on('disconnect', () => {
+    socket.on('disconnect', () => {
         if (socket.currentLobby && publicLobbies[socket.currentLobby]) {
             // 1. Βρίσκουμε ποιος χρήστης αποσυνδέθηκε ξαφνικά (π.χ. έκλεισε τον browser)
             const userLeaving = publicLobbies[socket.currentLobby].find(u => String(u.id) === String(socket.userId));
@@ -178,7 +183,7 @@ socket.on("leave-lobby", ({ activityId, userId }) => {
     });
 });
     
-// --- 4. ROUTES ---
+// --- 5. ROUTES SETUP ---
 app.use('/api', authRoutes);
 app.use('/api/activities', activitiesRoutes);
 app.use('/api/reviews', reviewsRoutes);
@@ -192,7 +197,7 @@ app.get('/', (req, res) => {
     res.send('Pyxis Backend is running correctly with Public Lobbies!');
 });
 
-// --- 5. SERVER START ---
+// --- 6. SERVER START ---
 const PORT = 5000;
 server.listen(PORT, () => {
     console.log(`🚀 Server is LIVE on http://localhost:${PORT}`);
