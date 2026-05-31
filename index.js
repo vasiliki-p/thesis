@@ -5,7 +5,7 @@ const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
 
-const authRoutes = require('./routes/auth');
+const authRoutes = require('./middleware/auth');
 const activitiesRoutes = require('./routes/activities');
 const reviewsRoutes = require('./routes/reviews');
 const aiRoutes = require('./routes/ai'); 

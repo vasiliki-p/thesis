@@ -1,14 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db"); // Βεβαιώσου ότι το path για το db είναι σωστό
+const db = require("../db");
+const authenticateToken = require("../middleware/auth");
+
+router.use(authenticateToken);
 
 // 1. Καταγραφή ενέργειας (POST /api/history)
 router.post("/", async (req, res) => {
-  const { user_id, activity_id, event } = req.body;
-  if (!user_id || !activity_id) return res.sendStatus(400);
+  const { activity_id, event } = req.body;
+  const user_id = req.user.id; 
+
+  if (!activity_id) {
+    return res.status(400).json({ error: "Λείπει το activity_id" });
+  }
 
   try {
-    // Καταγράφουμε την επίσκεψη
     await db.query(
       "INSERT INTO user_history (user_id, activity_id, event) VALUES (?, ?, ?)",
       [user_id, activity_id, event || 'view']
@@ -16,16 +22,14 @@ router.post("/", async (req, res) => {
     res.json({ message: "Logged" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Db error" });
+    res.status(500).json({ error: "Σφάλμα βάσης δεδομένων", details: err.message });
   }
 });
 
-// 2. Λήψη ιστορικού χρήστη (GET /api/history/:user_id)
-router.get("/:user_id", async (req, res) => {
-  const { user_id } = req.params;
+// 2. Λήψη ιστορικού χρήστη
+router.get("/", async (req, res) => {
+  const user_id = req.user.id; 
   try {
-    // Χρησιμοποιούμε GROUP BY για να πάρουμε κάθε δραστηριότητα ΜΙΑ φορά
-    // και MAX(event_time) για να κρατήσουμε την πιο πρόσφατη ώρα επίσκεψης.
     const sql = `
       SELECT a.*, MAX(h.event_time) as event_time 
       FROM user_history h
@@ -40,7 +44,7 @@ router.get("/:user_id", async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Db error" });
+    res.status(500).json({ error: "Σφάλμα βάσης δεδομένων", details: err.message });
   }
 });
 

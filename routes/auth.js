@@ -5,7 +5,7 @@ const db = require("../db");
 
 const router = express.Router();
 
-/*  Εγγραφή νέου χρήστη  */
+/* Εγγραφή νέου χρήστη  */
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -58,14 +58,9 @@ router.post("/login", async (req, res) => {
     }
 
     const user = users[0];
-    let match = false;
 
-    // υποστήριξη παλιών & νέων χρηστών
-    if (user.password.startsWith("$2b$")) {
-      match = await bcrypt.compare(password, user.password);
-    } else {
-      match = password === user.password;
-    }
+    // ΒΗΜΑ 4: Καθαρός και αυστηρός έλεγχος ΜΟΝΟ με bcrypt (αφαιρέθηκε το plain-text fallback)
+    const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
       return res.status(400).json({ message: "Μη έγκυρα διαπιστευτήρια" });
