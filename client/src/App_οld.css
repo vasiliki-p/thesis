@@ -1,0 +1,252 @@
+/* App.css - LUXURY TECH MINIMALISM 🎨 */
+
+:root {
+  --bg-clean: #ffffff;          /* Απόλυτο λευκό */
+  --text-bold: #000000;         /* Απόλυτο μαύρο */
+  --text-soft: #6e6e73;         /* Apple-style γκρι για δευτερεύοντα */
+  --accent-indigo: #5e5ce6;     /* SF Pro Indigo */
+  --card-border: rgba(0, 0, 0, 0.08);
+}
+
+body {
+  background-color: var(--bg-clean) !important;
+  color: var(--text-bold);
+  font-family: 'Inter', -apple-system, sans-serif;
+  letter-spacing: -0.02em; /* Πιο premium τυπογραφία */
+}
+
+/* 🧊 MINIMAL BENTO CARDS */
+.card {
+  background: #ffffff !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 32px !important; /* Μεγάλες, "φιλικές" γωνίες */
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02) !important; /* Σχεδόν αόρατη σκιά */
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.card:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.06) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* 🔘 HIGH-CONTRAST BUTTONS (Linear Style) */
+.btn-primary {
+  background: var(--text-bold) !important; /* Μαύρα κουμπιά για κύρος */
+  color: #ffffff !important;
+  border: none !important;
+  padding: 14px 32px !important;
+  border-radius: 100px !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem;
+  transition: all 0.3s ease !important;
+}
+
+.btn-primary:hover {
+  background: #333333 !important;
+  transform: scale(1.03);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 🖋️ TYPOGRAPHY */
+h1, h2, h3, .display-5 {
+  color: var(--text-bold) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.05em !important;
+}
+
+p, .card-text {
+  color: var(--text-soft) !important;
+  line-height: 1.6;
+  font-weight: 500 !important;
+}
+
+/* 🤝 THE LOBBY BENTO (Unique Accent) */
+.lobby-card {
+  background: var(--accent-indigo) !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+.lobby-card h4, .lobby-card p {
+  color: #fff !important;
+}
+
+footer {
+  background: var(--glass-effect) !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.05) !important; /* Πολύ διακριτική γραμμή */
+  padding: 100px 0 50px 0 !important; /* Περισσότερος "αέρας" πάνω-κάτω */
+  color: #087f79 !important;
+}
+
+.footer-logo {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  color: #000000 !important;
+  margin-bottom: 20px;
+}
+
+.footer-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #86868b !important; /* Απαλό γκρι για τους τίτλους (ΜΕΝΟΥ, INFO) */
+  margin-bottom: 25px;
+}
+
+.footer-link {
+  color: #424245 !important;
+  font-weight: 500;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  display:inline-block;
+  margin-bottom: 12px;
+}
+
+.footer-link:hover {
+  transform: translateX(5px); /* Μικρή μετακίνηση δεξιά */
+  color: #5e5ce6 !important; /* Το Indigo της Apple */
+}
+
+/* Το κάτω μέρος του footer (Copyright) */
+.footer-bottom {
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  margin-top: 60px;
+  padding-top: 30px;
+  font-size: 0.85rem;
+  color: #86868b !important;
+}
+/* App.css - SOCIAL AVATARS */
+.avatar-group {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-group div, .avatar-group img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #ffffff; /* Λευκό περίγραμμα για βάθος */
+  margin-left: -12px; /* Επικάλυψη avatars */
+  transition: all 0.3s ease;
+  object-fit: cover;
+  background: #f5f5f7;
+}
+
+.avatar-group div:first-child {
+  margin-left: 0;
+}
+
+.avatar-group div:hover {
+  transform: translateY(-5px);
+  z-index: 10; /* Έρχεται μπροστά στο hover */
+}
+
+
+/* App.css - MOOD FILTERS */
+.mood-pill {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: #1d1d1f !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  font-size: 0.9rem;
+}
+
+.mood-pill:hover {
+  background: #000000 !important; /* Μαύρο στο hover */
+  color: #ffffff !important;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mood-pill.active {
+  background: #5e5ce6 !important; /* Vibrant Indigo */
+  color: white !important;
+  border-color: transparent !important;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(94, 92, 230, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(94, 92, 230, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(94, 92, 230, 0); }
+}
+
+/* App.css - URGENCY ELEMENTS */
+.urgency-badge {
+  background: #ff3b30 !important; /* Apple Red */
+  color: white !important;
+  font-weight: 800 !important;
+  font-size: 0.7rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 12px !important;
+  border-radius: 100px !important;
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3) !important;
+}
+
+/* App.css - CHATBOT BUTTON */
+.chat-trigger {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 64px;
+  height: 64px;
+  background: #000000 !important; /* Μαύρο για premium look */
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.chat-trigger:hover {
+  transform: scale(1.15) rotate(-8deg);
+  background: #5e5ce6 !important; /* Indigo στο hover */
+  box-shadow: 0 20px 40px rgba(94, 92, 230, 0.4) !important;
+}
+
+/* App.css - PREMIUM LOBBY EFFECTS */
+
+.lobby-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.lobby-card::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.lobby-card:hover {
+  transform: scale(1.02) !important;
+  box-shadow: 0 40px 80px rgba(94, 92, 230, 0.3) !important;
+}
+
+/* App.css - CHAT UI ELEMENTS */
+.chat-bubble-me {
+  background: #5e5ce6 !important;
+  color: white !important;
+  border-radius: 20px 20px 4px 20px !important;
+}
+
+.chat-bubble-other {
+  background: #ffffff !important;
+  color: #1d1d1f !important;
+  border-radius: 20px 20px 20px 4px !important;
+}
