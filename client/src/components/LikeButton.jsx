@@ -7,17 +7,20 @@ export default function LikeButton({ activityId }) {
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const userId = localStorage.getItem("user_id");
+  // 1. Παίρνουμε το Token αντί για το userId
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    if (!userId || !activityId) return;
+    if (!token || !activityId) return;
 
     let isMounted = true;
 
     const checkLikeStatus = async () => {
       try {
+        // 2. Στο URL στέλνουμε ΜΟΝΟ το activity_id. Το token πάει στα headers!
         const res = await axios.get(
-          `http://localhost:5000/api/favourites/check?user_id=${userId}&activity_id=${activityId}`
+          `http://localhost:5000/api/favourites/check?activity_id=${activityId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         if (isMounted) setLiked(res.data.isLiked);
       } catch (err) {
@@ -30,13 +33,13 @@ export default function LikeButton({ activityId }) {
     return () => {
       isMounted = false;
     };
-  }, [activityId, userId]);
+  }, [activityId, token]);
 
   const handleToggleLike = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!userId) {
+    if (!token) {
       alert("Πρέπει να συνδεθείτε για να κάνετε Like!");
       return;
     }
@@ -46,15 +49,18 @@ export default function LikeButton({ activityId }) {
 
     try {
       if (liked) {
+        // 3. Στο DELETE, τα δεδομένα μπαίνουν στο 'data' και το token στο 'headers'
         await axios.delete(`http://localhost:5000/api/favourites/remove`, {
-          data: { user_id: userId, activity_id: activityId },
+          headers: { Authorization: `Bearer ${token}` },
+          data: { activity_id: activityId },
         });
         setLiked(false);
       } else {
-        await axios.post(`http://localhost:5000/api/favourites/add`, {
-          user_id: userId,
-          activity_id: activityId,
-        });
+        // 4. Στο POST, τα δεδομένα είναι το 2ο όρισμα, τα headers το 3ο
+        await axios.post(`http://localhost:5000/api/favourites/add`, 
+          { activity_id: activityId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setLiked(true);
       }
     } catch (err) {
@@ -70,14 +76,12 @@ export default function LikeButton({ activityId }) {
       onClick={handleToggleLike}
       className="bg-transparent border-0 p-0"
       style={{ 
-        /* Αν είναι Liked γίνεται Κόκκινο, αλλιώς παίρνει το χρώμα του κειμένου */
         color: liked ? "#E63946" : "var(--text-main)", 
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer", 
         zIndex: 10,
-        /* Bouncy animation όταν πας το ποντίκι από πάνω */
         transition: "transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)" 
       }}
       onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.15)"}
@@ -85,7 +89,6 @@ export default function LikeButton({ activityId }) {
       disabled={loading}
       aria-label={liked ? "Remove from favourites" : "Add to favourites"}
     >
-      {/* Αν είναι Liked δείχνει γεμάτη καρδιά, αλλιώς άδεια */}
       {liked ? <HeartFill size={22} /> : <Heart size={22} />}
     </button>
   );

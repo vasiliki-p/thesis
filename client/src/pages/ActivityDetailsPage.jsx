@@ -16,7 +16,8 @@ export default function ActivityDetailsPage() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false); 
 
-  const userId = localStorage.getItem("user_id"); 
+  // Παίρνουμε το token!
+  const token = localStorage.getItem("token"); 
 
   useEffect(() => {
     const fetchActivity = async () => {
@@ -26,8 +27,9 @@ export default function ActivityDetailsPage() {
         setActivity(response.data);
         setLoading(false);
 
-        if (userId) {
-          addToHistory(userId, id).catch(err => console.error("History log failed", err));
+        if (token) {
+          // Η addToHistory θέλει ΜΟΝΟ το id πλέον!
+          addToHistory(id).catch(err => console.error("History log failed", err));
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -36,24 +38,27 @@ export default function ActivityDetailsPage() {
       }
     };
     fetchActivity();
-  }, [id, userId]);
+  }, [id, token]);
 
   const handleJoinLobby = async () => {
     const storedUser = localStorage.getItem('user');
     const user = storedUser ? JSON.parse(storedUser) : null;
     
-    if (!userId) {
+    if (!token) {
       alert("Πρέπει να συνδεθείς για να μπεις στο Live Chat!");
       navigate('/login');
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/lobby/join', {
-        activityId: id,
-        userId: userId,
-        userName: user ? (user.username || user.name || "Εξερευνητής") : "Guest"
-      });
+      // Στέλνουμε το token στα headers και βγάζουμε το userId από το body
+      const response = await axios.post('http://localhost:5000/api/lobby/join', 
+        {
+          activityId: id,
+          userName: user ? (user.username || user.name || "Εξερευνητής") : "Guest"
+        },
+        { headers: { Authorization: `Bearer ${token}` } } // Το token!
+      );
       
       if (response.data.success) {
         navigate(`/lobby/${id}`); 
@@ -172,7 +177,7 @@ export default function ActivityDetailsPage() {
             </div>
 
             <div className="bento-card p-4 p-md-5 mb-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '32px' }}>
-              <ReviewSection activityId={id} userId={userId} />
+              <ReviewSection activityId={id} />
             </div>
           </div>
 

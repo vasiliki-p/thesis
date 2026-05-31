@@ -46,8 +46,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="d-flex align-items-center justify-content-center" style={{ minHeight: "100vh", background: "var(--inverted-text)" }}>
-      
+  <div className="d-flex align-items-center justify-content-center" style={{ minHeight: "100vh", background: "var(--bg-color)" }}>
       {/* Διακοσμητικά background blobs */}
       <div className="position-absolute" style={{ width: '300px', height: '300px', background: 'var(--accent-color)', borderRadius: '50%', filter: 'blur(100px)', opacity: '0.2', top: '10%', right: '10%', zIndex: 0 }}></div>
       <div className="position-absolute" style={{ width: '400px', height: '400px', background: '#8A2BE2', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.15', bottom: '10%', left: '10%', zIndex: 0 }}></div>

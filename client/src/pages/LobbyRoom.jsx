@@ -19,11 +19,16 @@ export default function LobbyRoom() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const displayName = user.username || "Guest"; 
   
-// --- 1. useEffect για Join, Data και Events ---
+  // Παίρνουμε το Token
+  const token = localStorage.getItem("token");
+
   useEffect(() => {
     // Α. Φόρτωση του Τίτλου (Activity ή Lobby)
     if (isNaN(id)) {
-        axios.get(`http://localhost:5000/api/group/info/${id}`)
+        // ΕΔΩ θέλει token γιατί τα group routes είναι πλέον κλειδωμένα!
+        axios.get(`http://localhost:5000/api/group/info/${id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
         .then(res => setActivity(res.data))
         .catch(() => setActivity({ title: "Δημόσιο Chat Room 💬" }));
     } else {
@@ -31,7 +36,7 @@ export default function LobbyRoom() {
         .then(res => setActivity(res.data))
         .catch(() => setActivity({ title: "Live Chat Δραστηριότητας" }));
     }
-
+    
     // Β. Φόρτωση των Παλιών Μηνυμάτων (Αυτό έλειπε!)
     axios.get(`http://localhost:5000/api/lobby/messages/${id}`)
     .then(res => {
