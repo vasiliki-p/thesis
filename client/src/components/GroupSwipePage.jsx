@@ -87,9 +87,15 @@ export default function GroupSwipePage() {
   const handleVote = async (voteType) => {
     if (currentIndex >= activities.length) return;
     const currentActivity = activities[currentIndex];
-    const userId = localStorage.getItem("user_id");
+    
+    // 1. Παίρνουμε το token στην αρχή της συνάρτησης
+    const token = localStorage.getItem("token");
 
-    if (!userId) { alert("Παρακαλώ συνδεθείτε ξανά."); return; }
+    // 2. Ελέγχουμε αν υπάρχει, αλλιώς του λέμε να συνδεθεί
+    if (!token) { 
+      alert("Παρακαλώ συνδεθείτε ξανά."); 
+      return; 
+    }
 
     // Ενεργοποίηση των Animations
     if (voteType === 'like') {
@@ -100,9 +106,17 @@ export default function GroupSwipePage() {
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/group/vote', {
-        sessionId, userId: Number(userId), activityId: Number(currentActivity.id), voteType
-      });
+      // 3. Στέλνουμε το αίτημα (χωρίς το userId) και με το token στα headers
+      const res = await axios.post('http://localhost:5000/api/group/vote', 
+        { 
+          sessionId, 
+          activityId: Number(currentActivity.id), 
+          voteType 
+        },
+        { 
+          headers: { 'Authorization': `Bearer ${token}` } 
+        }
+      );
 
       if (res.data.match) {
         socket.emit('send_swipe', { groupId: sessionId, activityId: currentActivity.id, match: true });

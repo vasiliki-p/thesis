@@ -83,18 +83,23 @@ export const sendMessageToChatbot = async (message) => {
 };
 
 // ================= HISTORY =================
-export const addToHistory = async (user_id, activity_id) => {
-  // Αν δεν είναι συνδεδεμένος (user_id null), δεν κάνουμε τίποτα
-  if (!user_id) return;
-  return axios.post(`${API_URL}/history`, { 
-    user_id, 
-    activity_id, 
-    event: 'view' 
-  });
+export const addToHistory = async (activity_id) => { // Αφαιρέσαμε το user_id από τις παραμέτρους
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  return axios.post(`${API_URL}/history`, 
+    { activity_id, event: 'view' },
+    { headers: { Authorization: `Bearer ${token}` } } // Στέλνουμε το token
+  );
 };
 
-export const getUserHistory = async (user_id) => {
-  const res = await axios.get(`${API_URL}/history/${user_id}`);
+export const getUserHistory = async () => { // Αφαιρέσαμε το user_id
+  const token = localStorage.getItem("token");
+  if (!token) return [];
+
+  const res = await axios.get(`${API_URL}/history`, { // Δεν βάζουμε το ID στο URL πλέον
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return res.data;
 };
 
