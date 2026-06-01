@@ -11,21 +11,18 @@ const PersonalChoice = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token"); // 1. Παίρνουμε το token
+        const token = localStorage.getItem("token");
 
-        // Αν δεν υπάρχει token (δεν έχει συνδεθεί), σταματάμε
         if (!token) {
             setLoading(false);
             return; 
         }
 
-        // 2. Τραβάμε ταυτόχρονα Δραστηριότητες και Προφίλ (στέλνοντας το token)
         const [allActivities, userProfile] = await Promise.all([
           getActivities(),
-          getUserProfile(token) // <--- ΣΗΜΑΝΤΙΚΟ: Περνάμε το token εδώ
+          getUserProfile(token) 
         ]);
 
-        // Έλεγχος αν ο χρήστης έχει βάλει έστω μία προτίμηση
         if (!userProfile || (!userProfile.location && !userProfile.interests && !userProfile.budget)) {
             setHasProfile(false);
             setLoading(false);
@@ -34,31 +31,29 @@ const PersonalChoice = () => {
 
         setHasProfile(true);
 
-        // 3. Ο Αλγόριθμος Ταιριάσματος
+        // --- ΝΕΟΣ, ΑΥΣΤΗΡΟΣ ΑΛΓΟΡΙΘΜΟΣ ΤΑΙΡΙΑΣΜΑΤΟΣ ---
         const selected = allActivities
           .map(act => {
             let score = 0;
             
-            // A. Location Match (+30)
-            if ( 
-              act.location?.toLowerCase().includes((userProfile.location ?? "").toLowerCase())
-            ) {
-              score += 30;
+            // A. Location Match (+40)
+            const userLoc = (userProfile.location || "").toLowerCase().trim();
+            if (userLoc && act.location?.toLowerCase().includes(userLoc)) {
+              score += 40;
             }
 
-
             // B. Interests Match (+40)
-            // Υποθέτουμε ότι τα ενδιαφέροντα έρχονται ως string ή array. Ελέγχουμε και τα δύο.
             const userInterests = Array.isArray(userProfile.interests) 
                 ? userProfile.interests.join(' ').toLowerCase() 
                 : (userProfile.interests || "").toLowerCase();
 
-            if (act.category && userInterests.includes(act.category.toLowerCase())) {
+            if (userInterests && act.category && userInterests.includes(act.category.toLowerCase())) {
                 score += 40;
             }
 
             // C. Budget Match (+20)
-            if (userProfile.budget && Number(act.cost) <= Number(userProfile.budget)) {
+            const userBudget = Number(userProfile.budget || 0);
+            if (userBudget > 0 && Number(act.cost) <= userBudget) {
                 score += 20;
             }
 
@@ -69,9 +64,10 @@ const PersonalChoice = () => {
             
             return { ...act, score };
           })
-          .filter(act => act.score >= 30) // Κρατάμε τα σχετικά
-          .sort((a, b) => b.score - a.score) // Ταξινόμηση
-          .slice(0, 4); // Top 4
+          // ΦΙΛΤΡΟ: Πρέπει πλέον να έχει πιάσει τουλάχιστον 40 (δηλαδή υποχρεωτικά Τοποθεσία ή Ενδιαφέρον)
+          .filter(act => act.score >= 40) 
+          .sort((a, b) => b.score - a.score) 
+          .slice(0, 4); 
 
         setChoices(selected);
 
@@ -85,26 +81,23 @@ const PersonalChoice = () => {
     fetchData();
   }, []);
 
-  // Αν φορτώνει ή δεν υπάρχει token (επισκέπτης), δεν δείχνουμε τίποτα για να μην χαλάει η αρχική
   if (loading) return null; 
   if (!localStorage.getItem("token")) return null;
 
-  // Αν έχει συνδεθεί αλλά δεν έχει συμπληρώσει προφίλ ή δεν βρέθηκαν matches
   if (!hasProfile || choices.length === 0) {
       return (
         <div className="container py-4">
             <div className="p-4 bg-light rounded shadow-sm border text-center">
                 <h5 className="fw-bold text-muted">Δεν βρήκαμε προτάσεις για σένα 😔</h5>
-                <p className="small text-muted mb-3">Συμπλήρωσε τις προτιμήσεις στο προφίλ σου (Πόλη, Ενδιαφέροντα, Budget) για να δεις τα Top Picks!</p>
+                <p className="small text-muted mb-3">Δεν υπάρχουν δραστηριότητες που να ταιριάζουν απόλυτα με τις ρυθμίσεις σου αυτή τη στιγμή.</p>
                 <Link to="/profile" className="btn btn-sm btn-primary rounded-pill px-4 shadow-sm">
-                    Ρύθμιση Προφίλ
+                    Αλλαγή Προτιμήσεων
                 </Link>
             </div>
         </div>
       );
   }
 
-  // Εμφάνιση των επιλογών
   return (
     <div className="container py-4">
       <div className="d-flex align-items-center mb-3">
@@ -147,7 +140,7 @@ const PersonalChoice = () => {
                 </div>
               </div>
             </div>
-          ))}
+        ))}
       </div>
     </div>
   );
