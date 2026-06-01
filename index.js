@@ -70,7 +70,6 @@ app.get('/api/lobby/messages/:activityId', async (req, res) => {
     }
 });
 
-// ✅ ΚΛΕΙΔΩΜΕΝΟ ROUTE: Χρησιμοποιεί πλέον το authenticateToken
 app.post('/api/lobby/join', authenticateToken, (req, res) => {
     const { activityId, userName } = req.body; // Σβήσαμε το userId από εδώ
     const userId = req.user.id; // Το παίρνουμε με ασφάλεια από το Token!
@@ -125,7 +124,8 @@ io.on('connection', (socket) => {
         }, 100);
     });
 
-    socket.on("leave-lobby", ({ activityId, userId }) => {
+    // ΒΑΛΑΜΕ async ΕΔΩ
+    socket.on("leave-lobby", async ({ activityId, userId }) => { 
         if (publicLobbies[activityId]) {
             // 1. Βρίσκουμε ποιος χρήστης φεύγει για να τυπώσουμε το μήνυμα
             const userLeaving = publicLobbies[activityId].find(u => String(u.id) === String(userId));
@@ -144,6 +144,19 @@ io.on('connection', (socket) => {
             
             // 4. Βγάζουμε το socket από το συγκεκριμένο "δωμάτιο"
             socket.leave(`lobby_${activityId}`);
+
+            // 🚀 5. ΑΥΤΟΚΑΤΑΣΤΡΟΦΗ: Αν το δωμάτιο άδειασε, το διαγράφουμε!
+            if (publicLobbies[activityId].length === 0) {
+                console.log(`Lobby ${activityId} is now empty. Self-destructing... 💥`);
+                delete publicLobbies[activityId]; // Διαγραφή από τη μνήμη
+
+                try {
+                    // Διαγραφή από τη βάση (για να φύγει από το Ραντάρ)
+                    await db.query("DELETE FROM group_sessions WHERE session_id = ?", [String(activityId)]);
+                } catch (err) {
+                    console.error("Error deleting empty lobby from DB:", err);
+                }
+            }
         }
     });
 
@@ -162,23 +175,38 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () => {
+    // ΒΑΛΑΜΕ async ΕΔΩ
+    socket.on('disconnect', async () => { 
         if (socket.currentLobby && publicLobbies[socket.currentLobby]) {
-            // 1. Βρίσκουμε ποιος χρήστης αποσυνδέθηκε ξαφνικά (π.χ. έκλεισε τον browser)
-            const userLeaving = publicLobbies[socket.currentLobby].find(u => String(u.id) === String(socket.userId));
+            const activityId = socket.currentLobby;
+
+            // 1. Βρίσκουμε ποιος χρήστης αποσυνδέθηκε ξαφνικά
+            const userLeaving = publicLobbies[activityId].find(u => String(u.id) === String(socket.userId));
             if (userLeaving) {
-                console.log(`User ${userLeaving.name} left Lobby ${socket.currentLobby} (Disconnected)`);
+                console.log(`User ${userLeaving.name} left Lobby ${activityId} (Disconnected)`);
             }
 
             // 2. Αφαίρεση χρήστη
-            publicLobbies[socket.currentLobby] = publicLobbies[socket.currentLobby]
-                .filter(u => String(u.id) !== String(socket.userId));
+            publicLobbies[activityId] = publicLobbies[activityId].filter(u => String(u.id) !== String(socket.userId));
             
             // 3. Ενημέρωση υπολοίπων
             io.emit("lobby-updated", { 
-                activityId: socket.currentLobby, 
-                members: publicLobbies[socket.currentLobby] 
+                activityId: activityId, 
+                members: publicLobbies[activityId] 
             });
+
+            // 🚀 4. ΑΥΤΟΚΑΤΑΣΤΡΟΦΗ: Αν το δωμάτιο άδειασε επειδή έκλεισε το tab!
+            if (publicLobbies[activityId].length === 0) {
+                console.log(`Lobby ${activityId} is now empty after disconnect. Self-destructing... 💥`);
+                delete publicLobbies[activityId]; // Διαγραφή από τη μνήμη
+
+                try {
+                    // Διαγραφή από τη βάση
+                    await db.query("DELETE FROM group_sessions WHERE session_id = ?", [String(activityId)]);
+                } catch (err) {
+                    console.error("Error deleting empty lobby from DB:", err);
+                }
+            }
         }
     });
 });
