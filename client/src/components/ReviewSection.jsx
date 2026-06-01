@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { StarFill, ChatLeftTextFill, SendFill } from 'react-bootstrap-icons';
 
-export default function ReviewSection({ activityId, userId }) {
+// 1. Αφαιρέσαμε το userId από τα props
+export default function ReviewSection({ activityId }) {
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(5);
   const [loading, setLoading] = useState(true);
+
+  // 2. Παίρνουμε το token για να ξέρουμε αν ο χρήστης είναι συνδεδεμένος
+  const token = localStorage.getItem("token");
 
   // --- 1. FETCH ΚΡΙΤΙΚΩΝ ---
   useEffect(() => {
@@ -28,30 +32,26 @@ export default function ReviewSection({ activityId, userId }) {
   // --- 2. POST ΝΕΑΣ ΚΡΙΤΙΚΗΣ ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Αφαιρέσαμε το if (!newReview.trim()) ώστε να μπορείς 
-    // να στείλεις μόνο αστεράκια!
 
     try {
       const storedUser = localStorage.getItem('user');
       const user = storedUser ? JSON.parse(storedUser) : null;
-      // Σωστό όνομα
       const userName = user ? (user.username || "Χρήστης") : "Χρήστης";
 
-      // Στέλνουμε στο backend
+      // 3. Στέλνουμε ΜΟΝΟ το comment και το activity_id, και το TOKEN στα headers!
       const response = await axios.post('http://localhost:5000/api/reviews', {
         activity_id: activityId,
-        user_id: userId,
-        comment: newReview, // <--- Στέλνουμε ΜΟΝΟ το comment
+        comment: newReview, 
         rating: rating
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       // Φτιάχνουμε το object για να φανεί αμέσως στην οθόνη
       const newRevObj = {
         id: response.data.id || Date.now(),
-        user_id: userId,
-        username: userName, // Το backend στέλνει username
-        comment: newReview, // Το backend στέλνει comment
+        username: userName, 
+        comment: newReview, 
         rating: rating,
         created_at: new Date().toISOString()
       };
@@ -105,8 +105,8 @@ export default function ReviewSection({ activityId, userId }) {
         <ChatLeftTextFill style={{ color: 'var(--accent-color)' }} /> Κριτικές
       </h4>
 
-      {/* ΦΟΡΜΑ ΝΕΑΣ ΚΡΙΤΙΚΗΣ */}
-      {userId ? (
+      {/* 4. Χρησιμοποιούμε το token αντί για το userId για τον έλεγχο */}
+      {token ? (
         <div className="p-4 mb-5 rounded-4" style={{ background: 'rgba(128,128,128,0.05)', border: '1px solid var(--card-border)' }}>
           <h6 className="fw-bold mb-3" style={{ color: 'var(--text-main)' }}>Γράψε την εμπειρία σου</h6>
           <form onSubmit={handleSubmit}>
@@ -153,14 +153,12 @@ export default function ReviewSection({ activityId, userId }) {
       <div className="d-flex flex-column gap-3">
         {reviews.length > 0 ? (
           reviews.map((review, index) => {
-            // Υπολογισμός ονόματος
             const displayName = review.username || "Anonymous";
 
             return (
               <div key={review.id || index} className="p-4 rounded-4" style={{ background: 'var(--bg-color)', border: '1px solid var(--card-border)' }}>
                 <div className="d-flex justify-content-between align-items-start mb-2">
                   <div className="d-flex align-items-center gap-3">
-                    {/* ΤΟ ΣΩΣΤΟ UI-AVATAR */}
                     <img 
                       src={`https://ui-avatars.com/api/?name=${displayName}&background=random&color=fff&rounded=true&bold=true`} 
                       alt="User Avatar" 
@@ -178,7 +176,6 @@ export default function ReviewSection({ activityId, userId }) {
                     {renderStars(review.rating || 5)}
                   </div>
                 </div>
-                {/* Εμφανίζει κανονικά το comment (ακόμα και μετά από refresh) */}
                 <p className="mt-3 mb-0" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
                   {review.comment}
                 </p>

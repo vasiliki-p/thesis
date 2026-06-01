@@ -10,6 +10,9 @@ export default function SuggestionsPage() {
   const [error, setError] = useState("");
   const [weatherStatus, setWeatherStatus] = useState(null);
 
+  // Παίρνουμε το token!
+  const token = localStorage.getItem("token");
+
   const getImage = (act) => {
     if (act.image_url && act.image_url.length > 10) return act.image_url;
     return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800";
@@ -20,15 +23,13 @@ export default function SuggestionsPage() {
     setFilters({ ...filters, interests: next });
   };
 
-
-const fetchSuggestions = async () => {
+  const fetchSuggestions = async () => {
     setError("");
     setLoading(true);
-    let finalWeather = "Clear"; // Η απόλυτη προεπιλογή
+    let finalWeather = "Clear"; 
 
     try {
       try {
-        // Διαβάζει το κλειδί από το .env του Frontend!
         const API_KEY = process.env.REACT_APP_OPENWEATHER_API_KEY; 
         
         let cityQuery = filters.location || "Athens";
@@ -42,7 +43,6 @@ const fetchSuggestions = async () => {
         else if (locLower.includes("βολ") || locLower.includes("volo")) cityQuery = "Volos";
         else if (locLower.includes("ιωανν") || locLower.includes("ioann")) cityQuery = "Ioannina";
         
-        // Αν το κλειδί λείπει, πετάει σφάλμα πριν καν κάνει το request!
         if (!API_KEY) {
           console.warn("⚠️ ΠΡΟΣΟΧΗ: Το κλειδί REACT_APP_OPENWEATHER_API_KEY δε βρέθηκε στο .env του Frontend!");
           throw new Error("Missing API Key");
@@ -57,13 +57,13 @@ const fetchSuggestions = async () => {
         console.warn("☁️ Το API καιρού απέτυχε, αλλά κρατάμε την προεπιλογή (Clear) για το banner.");
       }
       
-      // Κλειδώνουμε το state του καιρού για να εμφανιστεί το banner
       setWeatherStatus(finalWeather);
 
-      // Στέλνουμε δεδομένα στην AI
-      const res = await axios.post("http://localhost:5000/api/ai/suggest", {
-        interests: filters.interests, budget: filters.budget, location: filters.location, weather: finalWeather
-      });
+      // Προσθήκη του Token στα Headers
+      const res = await axios.post("http://localhost:5000/api/ai/suggest", 
+        { interests: filters.interests, budget: filters.budget, location: filters.location, weather: finalWeather },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
 
       if (res.data && res.data.suggestions) {
         setSuggestions(res.data.suggestions);
@@ -76,8 +76,6 @@ const fetchSuggestions = async () => {
       setLoading(false);
     }
   };
-
-      
 
   return (
     <div className="container py-5 mt-5">
@@ -199,9 +197,10 @@ const fetchSuggestions = async () => {
                <div className="card-body d-flex flex-column p-4 flex-grow-1">
                   <h5 className="fw-bold mb-3" style={{ color: 'var(--text-main)' }}>{item.title}</h5>
                   <div className="d-flex align-items-center gap-3 small mb-3">
-                    {/* Έξυπνο Link για Google Maps */}
+                    
+                    {/* Διορθωμένο Link για Google Maps */}
                     <a 
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.title + ' ' + item.location)}`} 
+                      href={`https://maps.google.com/?q=${encodeURIComponent(item.title + ' ' + item.location)}`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="d-flex align-items-center gap-1 text-decoration-none transition-btn" 
@@ -209,6 +208,7 @@ const fetchSuggestions = async () => {
                       <GeoAltFill style={{ color: 'var(--accent-color)' }} /> 
                       <span style={{ borderBottom: '1px dashed var(--text-muted)' }}>{item.location}</span>
                     </a>
+                    
                     <span className="fw-bold" style={{ color: 'var(--text-main)' }}>{Number(item.cost) === 0 ? "Free" : `${item.cost}€`}</span>
                   </div>
                   

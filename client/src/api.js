@@ -14,8 +14,18 @@ export const loginUser = async (email, password) => {
 
 // ================= AI SUGGESTIONS =================
 // 🔹 search + personalization
-export const getAiSuggestions = async ({userId = null, interests = "",budget = null,location = ""}) => {
-  const res = await axios.post(`${API_URL}/ai/suggest`, {userId,interests,budget,location});
+export const getAiSuggestions = async ({ interests = "", budget = null, location = "" }) => {
+  const token = localStorage.getItem("token"); // Παίρνουμε το token
+  const res = await axios.post(
+    `${API_URL}/ai/suggest`, 
+    { interests, budget, location }, // Αφαιρέσαμε το userId!
+    { headers: { Authorization: `Bearer ${token}` } } // Στέλνουμε το token στα headers
+  );
+  return res.data;
+};
+
+export const sendMessageToOfflineAi = async (message) => {
+  const res = await axios.post(`${API_URL}/ai/offline`, { message });
   return res.data;
 };
 
@@ -36,21 +46,15 @@ export const getReviewsByActivity = async (activityId) => {
   return res.data;
 };
 
-export const addReview = async (user_id, activity_id, rating, comment) => {
-  const res = await axios.post(`${API_URL}/reviews`, {
-    user_id,
-    activity_id,
-    rating,
-    comment
-  });
+export const addReview = async (activity_id, rating, comment) => {
+  const token = localStorage.getItem("token"); // Παίρνουμε το token
+  const res = await axios.post(
+    `${API_URL}/reviews`, 
+    { activity_id, rating, comment }, // Αφαιρέσαμε το user_id!
+    { headers: { Authorization: `Bearer ${token}` } } // Στέλνουμε το token στα headers
+  );
   return res.data;
 };
-
-export const sendMessageToOfflineAi = async (message) => {
-const res = await axios.post(`${API_URL}/ai/offline`, { message });
-return res.data;
-};
-
 
 // ================= PROFILE =================
 export const getUserProfile = async (token) => {
@@ -66,13 +70,14 @@ export const updateUserProfile = async (token, data) => {
   });
   return res.data;
 };
+
 // ================= STATS =================
 export const getUserStats = async (token) => {
   const res = await axios.get(`${API_URL}/user/stats`, {   
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.data;
-} ;  
+};  
 
 // ================= CHAT BOT =================
 export const sendMessageToChatbot = async (message) => {
@@ -83,23 +88,22 @@ export const sendMessageToChatbot = async (message) => {
 };
 
 // ================= HISTORY =================
-export const addToHistory = async (activity_id) => { // Αφαιρέσαμε το user_id από τις παραμέτρους
+export const addToHistory = async (activity_id) => { 
   const token = localStorage.getItem("token");
   if (!token) return;
 
   return axios.post(`${API_URL}/history`, 
     { activity_id, event: 'view' },
-    { headers: { Authorization: `Bearer ${token}` } } // Στέλνουμε το token
+    { headers: { Authorization: `Bearer ${token}` } } 
   );
 };
 
-export const getUserHistory = async () => { // Αφαιρέσαμε το user_id
+export const getUserHistory = async () => { 
   const token = localStorage.getItem("token");
   if (!token) return [];
 
-  const res = await axios.get(`${API_URL}/history`, { // Δεν βάζουμε το ID στο URL πλέον
+  const res = await axios.get(`${API_URL}/history`, { 
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.data;
 };
-
