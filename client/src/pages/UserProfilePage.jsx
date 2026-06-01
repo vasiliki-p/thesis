@@ -63,7 +63,10 @@ export default function UserProfilePage() {
       setLoadingFavourites(true);
       setLoadingHistory(true);
       try {
-        const favRes = await axios.get(`http://localhost:5000/api/favourites/${profile.id}`);
+        // 1. Βάλαμε το Token και στο GET των favourites (για παν ενδεχόμενο)
+        const favRes = await axios.get(`http://localhost:5000/api/favourites/${profile.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
         const favouriteIds = favRes.data.map(Number);
         const actRes = await axios.get("http://localhost:5000/api/activities");
 
@@ -71,18 +74,23 @@ export default function UserProfilePage() {
           setFavourites(actRes.data.filter((act) => favouriteIds.includes(Number(act.id))));
         } else { setFavourites([]); }
 
-        const historyData = await getUserHistory(profile.id);
+        // 2. Αφαιρέσαμε το profile.id από την κλήση (το API.js χρησιμοποιεί το token)
+        const historyData = await getUserHistory();
         setHistory(historyData);
       } catch (err) { console.error("Error loading data:", err); } 
       finally { setLoadingFavourites(false); setLoadingHistory(false); }
     };
     fetchData();
-  }, [profile.id]);
+  }, [profile.id, token]);
 
   const handleRemoveFav = async (activityId) => {
     if (!window.confirm("Σίγουρα θες να το διαγράψεις από τα αγαπημένα;")) return;
     try {
-      await axios.delete("http://localhost:5000/api/favourites/remove", { data: { user_id: profile.id, activity_id: activityId } });
+      // 3. Στέλνουμε το token στα headers και βγάζουμε το user_id από το body!
+      await axios.delete("http://localhost:5000/api/favourites/remove", { 
+          headers: { Authorization: `Bearer ${token}` },
+          data: { activity_id: activityId } 
+      });
       setFavourites((prev) => prev.filter((f) => f.id !== activityId));
     } catch (err) { alert("Κάτι πήγε στραβά με τη διαγραφή."); }
   };
