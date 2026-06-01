@@ -19,9 +19,14 @@ export default function StatsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem("token"); // Παίρνουμε το Token
+        
         // Φέρνουμε ΠΑΡΑΛΛΗΛΑ τα reviews του χρήστη και τις δραστηριότητες
         const [reviewsRes, activitiesRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/reviews/user/${userId}`),
+          // ΔΙΟΡΘΩΣΗ: Αφαιρέσαμε το ${userId} και βάλαμε το Token στα Headers
+          axios.get(`http://localhost:5000/api/reviews/user`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
           axios.get(`http://localhost:5000/api/activities`)
         ]);
         

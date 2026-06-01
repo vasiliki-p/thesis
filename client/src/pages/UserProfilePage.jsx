@@ -63,8 +63,8 @@ export default function UserProfilePage() {
       setLoadingFavourites(true);
       setLoadingHistory(true);
       try {
-        // 1. Βάλαμε το Token και στο GET των favourites (για παν ενδεχόμενο)
-        const favRes = await axios.get(`http://localhost:5000/api/favourites/${profile.id}`, {
+        // ΔΙΟΡΘΩΣΗ: Σβήσαμε το ${profile.id} από το τέλος του link!
+        const favRes = await axios.get("http://localhost:5000/api/favourites", {
             headers: { Authorization: `Bearer ${token}` }
         });
         const favouriteIds = favRes.data.map(Number);
@@ -74,7 +74,7 @@ export default function UserProfilePage() {
           setFavourites(actRes.data.filter((act) => favouriteIds.includes(Number(act.id))));
         } else { setFavourites([]); }
 
-        // 2. Αφαιρέσαμε το profile.id από την κλήση (το API.js χρησιμοποιεί το token)
+        // Το getUserHistory() στο api.js διαβάζει ήδη το token, οπότε δεν θέλει παραμέτρους
         const historyData = await getUserHistory();
         setHistory(historyData);
       } catch (err) { console.error("Error loading data:", err); } 
