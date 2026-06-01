@@ -58,30 +58,41 @@ function Chatbot() {
     }
   };
 
-  // --- Η ΚΑΡΔΙΑ ΤΗΣ ΕΞΥΠΝΗΣ ΛΕΙΤΟΥΡΓΙΑΣ ---
+ // --- Η ΚΑΡΔΙΑ ΤΗΣ ΕΞΥΠΝΗΣ ΛΕΙΤΟΥΡΓΙΑΣ (ΔΙΟΡΘΩΜΕΝΗ ΓΙΑ ΠΟΛΛΑΠΛΑ LINKS) ---
   const showBubble = (msg) => {
-    const linkMatch = msg.text.match(/{{LINK:(.*?)}}/);
-    const cleanText = msg.text.replace(/{{LINK:.*?}}/, "").trim();
-    const linkUrl = linkMatch ? linkMatch[1] : null;
+    // 1. Βρίσκουμε ΟΛΑ τα links με Global Regex (/g)
+    const linkRegex = /{{LINK:(.*?)}}/g;
+    const links = [];
+    let match;
+
+    while ((match = linkRegex.exec(msg.text)) !== null) {
+      links.push(match[1]);
+    }
+
+    // 2. Αφαιρούμε ΟΛΑ τα tags από το κείμενο που θα διαβάσει ο χρήστης
+    const cleanText = msg.text.replace(linkRegex, "").trim();
 
     return (
       <div>
         {cleanText}
-        {msg.from === "ai" && linkUrl && (
-          <div style={{ marginTop: "10px" }}>
-            <Link
-              to={linkUrl}
-              style={styles.linkButton}
-              onClick={() => setIsOpen(false)}
-            >
-              🚀 Δες την πρόταση
-            </Link>
+        {msg.from === "ai" && links.length > 0 && (
+          <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+            {/* 3. Φτιάχνουμε ένα κουμπί για ΚΑΘΕ link που βρήκαμε */}
+            {links.map((url, index) => (
+              <Link
+                key={index}
+                to={url}
+                style={styles.linkButton}
+                onClick={() => setIsOpen(false)}
+              >
+                🚀 Δες την πρόταση {links.length > 1 ? `#${index + 1}` : ""}
+              </Link>
+            ))}
           </div>
         )}
       </div>
     );
   };
-
   return (
     <>
       {isOpen && (
