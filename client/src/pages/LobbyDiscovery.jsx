@@ -13,13 +13,17 @@ export default function LobbyDiscovery() {
   const [newLobby, setNewLobby] = useState({ name: '', type: 'Διασκέδαση', location: '' });
 
   const userId = localStorage.getItem("user_id");
+  // 1. Παίρνουμε το Token
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchLobbies = async () => {
       try {
         setLoading(true);
-        // Φέρνει μόνο τα ΑΝΟΙΧΤΑ (Public) Lobbies για το Ραντάρ
-       const response = await axios.get('http://localhost:5000/api/group/active');
+        // 2. Στέλνουμε το Token στα headers για να μας αφήσει ο server να δούμε τα lobbies
+        const response = await axios.get('http://localhost:5000/api/group/active', {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         setLobbies(response.data);
       } catch (err) {
         console.error("Σφάλμα κατά τη φόρτωση των lobbies:", err);
@@ -28,10 +32,10 @@ export default function LobbyDiscovery() {
       }
     };
     fetchLobbies();
-  }, []);
+  }, [token]);
 
   const openCreateModal = (publicMode) => {
-    if (!userId) { alert("Πρέπει να συνδεθείς πρώτα!"); navigate('/login'); return; }
+    if (!token) { alert("Πρέπει να συνδεθείς πρώτα!"); navigate('/login'); return; }
     setIsPublicMode(publicMode);
     setShowModal(true);
   };
@@ -39,26 +43,28 @@ export default function LobbyDiscovery() {
   const handleCreateLobby = async (e) => {
     e.preventDefault();
     try {
+      // 3. Βγάζουμε το hostId (το βρίσκει το backend) και περνάμε το Token στα headers!
       const res = await axios.post('http://localhost:5000/api/group/create', { 
-        hostId: userId,
         isPublic: isPublicMode, 
         lobbyName: newLobby.name || (isPublicMode ? 'Pyxis Group' : 'Private Squad'),
         lobbyType: newLobby.type,
         lobbyLocation: newLobby.location || 'Αθήνα'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       
       if (res.data.success) {
         setShowModal(false);
-        navigate(`/lobby/${res.data.pin}`);      }
+        navigate(`/lobby/${res.data.pin}`);      
+      }
     } catch (err) {
       console.error("Lobby create error:", err);
       alert("Σφάλμα κατά τη δημιουργία δωματίου");
     }
   };
 
-  // --- ΕΔΩ ΠΡΟΣΘΕΣΑΜΕ ΤΟΝ ΕΛΕΓΧΟ ΓΙΑ ΤΗ ΣΥΜΜΕΤΟΧΗ ---
   const handleJoinLobby = (lobbyId) => {
-    if (!userId) {
+    if (!token) {
       alert("Πρέπει να συνδεθείς ή να κάνεις εγγραφή για να μπεις στην παρέα! 🚀");
       navigate('/login');
       return; 
@@ -116,7 +122,6 @@ export default function LobbyDiscovery() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  {/* --- ΕΔΩ ΚΑΛΟΥΜΕ ΤΗ ΝΕΑ ΣΥΝΑΡΤΗΣΗ ΣΤΟ ΚΟΥΜΠΙ --- */}
                   <button onClick={() => handleJoinLobby(lobby.pin || lobby.id)} className="btn w-100 fw-bold py-3 transition-btn rounded-pill" style={{ background: '#d97706', color: '#fff' }}>
                     Join Lobby 🚀
                   </button>
