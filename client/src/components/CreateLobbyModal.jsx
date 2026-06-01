@@ -7,25 +7,33 @@ export default function CreateLobbyModal({ show, onClose }) {
   const navigate = useNavigate();
   const [newLobby, setNewLobby] = useState({ name: '', type: 'Διασκέδαση', location: '' });
 
+  // 1. Παίρνουμε το Token από το localStorage
+  const token = localStorage.getItem('token');
+
   if (!show) return null;
 
   const handleCreateLobby = async (e) => {
     e.preventDefault();
     
-    try {
-      // Παίρνουμε το ID του χρήστη
-      const userId = localStorage.getItem('user_id') || 1; 
+    // Έλεγχος ασφαλείας: Αν δεν έχει token, τον στέλνουμε στο login
+    if (!token) {
+      alert("Πρέπει να συνδεθείς για να δημιουργήσεις παρέα!");
+      navigate('/login');
+      return;
+    }
 
-      // 1. Στέλνουμε τα στοιχεία στο Backend για να δημιουργήσει και να ΑΠΟΘΗΚΕΥΣΕΙ το δωμάτιο
+    try {
+      // 2. Στέλνουμε τα στοιχεία ΧΩΡΙΣ το hostId, αλλά ΜΕ το Token στα headers
       const response = await axios.post('http://localhost:5000/api/group/create', {
-        hostId: userId,
         isPublic: false, // Είναι private
         lobbyName: newLobby.name,
         lobbyType: newLobby.type,
         lobbyLocation: newLobby.location
+      }, {
+        headers: { Authorization: `Bearer ${token}` } // <-- Το "κλειδί" μας!
       });
 
-      // 2. Παίρνουμε το ΕΠΙΣΗΜΟ PIN που μας έδωσε η βάση δεδομένων
+      // 3. Παίρνουμε το ΕΠΙΣΗΜΟ PIN που μας έδωσε η βάση δεδομένων
       const officialPin = response.data.pin;
 
       onClose(); // Κλείνουμε το modal
