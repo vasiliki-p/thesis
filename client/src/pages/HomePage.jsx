@@ -8,21 +8,30 @@ import axios from 'axios';
 export default function HomePage() {
   const navigate = useNavigate();
   
-  const userData = localStorage.getItem('user'); 
-  const user = userData ? JSON.parse(userData) : null;
+  // Παίρνουμε το Token από το localStorage
+  const token = localStorage.getItem('token'); 
 
   const [showModal, setShowModal] = useState(false);
   const [pinInput, setPinInput] = useState('');
 
   const handleJoinLobby = async (destination) => {
+    // 1. Έλεγχος Ασφαλείας: Πρέπει να είναι συνδεδεμένος!
+    if (!token) {
+      alert('Πρέπει να συνδεθείτε για να μπείτε σε μια παρέα!');
+      navigate('/login');
+      return;
+    }
+
     if (pinInput.length < 3) {
       alert('Παρακαλώ εισάγετε έγκυρο PIN!');
       return;
     }
     
     try {
-      // Ρωτάμε το backend σου αν υπάρχει αυτό το PIN 
-      await axios.get(`http://localhost:5000/api/group/info/${pinInput}`);
+      // 2. Ρωτάμε το backend με το Token στα headers!
+      await axios.get(`http://localhost:5000/api/group/info/${pinInput}`, {
+          headers: { Authorization: `Bearer ${token}` }
+      });
       
       // Αν δεν βγάλει error, το δωμάτιο βρέθηκε! Προχωράμε:
       if (destination === 'chat') {
@@ -31,7 +40,7 @@ export default function HomePage() {
         navigate(`/group-swipe/${pinInput}`);
       }
     } catch (error) {
-      // Αν το backend γυρίσει 404 (Δεν βρέθηκε)
+      // Αν το backend γυρίσει 404 (Δεν βρέθηκε) ή 401
       alert('❌ Το δωμάτιο δεν βρέθηκε! Ελέγξτε το PIN σας.');
     }
   };
