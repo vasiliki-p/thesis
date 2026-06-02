@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db'); 
-const authenticateToken = require("../middleware/auth"); // Το βάζουμε και εδώ!
+const authenticateToken = require("../middleware/auth"); 
 
 // Προστατεύουμε όλες τις διαδρομές των groups (μόνο συνδεδεμένοι χρήστες)
 router.use(authenticateToken);
 
 // --- 1. ΔΗΜΙΟΥΡΓΙΑ ΝΕΑΣ ΠΑΡΕΑΣ (Session) ---
 router.post('/create', async (req, res) => {
-    // ΣΒΗΣΑΜΕ το hostId από το body. Το παίρνουμε με ασφάλεια από το token (req.user.id)
     const { isPublic, lobbyName, lobbyType, lobbyLocation } = req.body;
     const hostId = req.user.id; 
     const pin = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -23,11 +22,9 @@ router.post('/create', async (req, res) => {
         res.json({ success: true, pin });
     } catch (error) {
         console.error(error);
-        // Ενιαίο Error Handling (Βήμα 3)
         res.status(500).json({ error: 'Αποτυχία δημιουργίας session', details: error.message });
     }
 });
-
 
 // --- 1.5 ΕΥΡΕΣΗ ΑΝΟΙΧΤΩΝ LOBBIES ΓΙΑ ΤΟ ΡΑΝΤΑΡ ---
 router.get('/active', async (req, res) => {
@@ -54,9 +51,8 @@ router.get('/active', async (req, res) => {
 
 // --- 2. ΨΗΦΟΦΟΡΙΑ & ΕΛΕΓΧΟΣ MATCH (Δυναμικός Αλγόριθμος) ---
 router.post('/vote', async (req, res) => {
-    // ΣΒΗΣΑΜΕ το userId από το body!
     const { sessionId, activityId, voteType } = req.body;
-    const userId = req.user.id; // Το παίρνουμε από το token
+    const userId = req.user.id; 
     
     let isMatch = false; 
     
@@ -95,7 +91,7 @@ router.post('/vote', async (req, res) => {
     }
 });
 
-// --- 3. SESSION SUMMARY (Η δική σου διαδρομή) ---
+// --- 3. SESSION SUMMARY ---
 router.get('/session-summary/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     try {
@@ -128,6 +124,74 @@ router.get('/info/:pin', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Σφάλμα κατά την αναζήτηση πληροφοριών', details: error.message });
+    }
+});
+
+// --- 5. GET SWIPE CARDS (ΑΥΣΤΗΡΟ αλλά ΕΛΑΣΤΙΚΟ MATCH στα γράμματα) ---
+router.get('/activities/:sessionId', async (req, res) => {
+    const { sessionId } = req.params;
+    try {
+        const [sessionData] = await db.query(
+            'SELECT type, location FROM group_sessions WHERE session_id = ?',
+            [String(sessionId)]
+        );
+
+        if (sessionData.length === 0) {
+            return res.status(404).json({ error: "Το δωμάτιο δεν βρέθηκε." });
+        }
+
+        const roomCategory = sessionData[0].type ? sessionData[0].type.trim() : "";
+        const roomLocation = sessionData[0].location ? sessionData[0].location.trim() : "";
+
+        console.log(`🔍 Μοιράζω κάρτες για: Κατηγορία="${roomCategory}", Περιοχή="${roomLocation}"`);
+
+        const [activities] = await db.query(`
+            SELECT * FROM activities 
+            WHERE category LIKE ? AND location LIKE ? 
+            ORDER BY RAND()
+        `, [`%${roomCategory}%`, `%${roomLocation}%`]);
+
+        res.json(activities);
+    } catch (err) {
+        console.error("Σφάλμα κατά την ανάκτηση των καρτών:", err);
+        res.status(500).json({ error: "Σφάλμα διακομιστή." });
+    }
+});
+
+// --- 6. GET MATCH RESULTS (Εδώ υπολογίζεται ο Νικητής!) ---
+router.get('/swipe/results/:sessionId', async (req, res) => {
+    const { sessionId } = req.params;
+    try {
+      const [usersResult] = await db.query(
+        'SELECT COUNT(DISTINCT user_id) as totalUsers FROM group_votes WHERE session_id = ?',
+        [String(sessionId)]
+      );
+      
+      const maxVotes = usersResult[0].totalUsers || 1; 
+  
+      const [results] = await db.query(`
+        SELECT 
+          a.id, 
+          a.title, 
+          a.category, 
+          a.image_url, 
+          COUNT(v.user_id) as votes
+        FROM group_votes v
+        JOIN activities a ON v.activity_id = a.id
+        WHERE v.session_id = ? AND v.vote_type = 'like'
+        GROUP BY a.id, a.title, a.category, a.image_url
+        ORDER BY votes DESC
+      `, [String(sessionId)]);
+  
+      const formattedResults = results.map(row => ({
+        ...row,
+        maxVotes: maxVotes
+      }));
+  
+      res.json(formattedResults);
+    } catch (err) {
+      console.error("Σφάλμα κατά την ανάκτηση των Match Results:", err);
+      res.status(500).json({ error: "Σφάλμα διακομιστή κατά τον υπολογισμό των matches." });
     }
 });
 

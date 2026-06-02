@@ -18,6 +18,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ✅ Παίρνει τις αξιολογήσεις ΜΟΝΟ του συνδεδεμένου χρήστη
+router.get('/user', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id; // Το ID έρχεται από το middleware authenticateToken
+    const [results] = await db.query(`
+      SELECT reviews.*, activities.title AS activity_title, activities.category 
+      FROM reviews
+      JOIN activities ON reviews.activity_id = activities.id
+      WHERE reviews.user_id = ?
+      ORDER BY reviews.created_at DESC
+    `, [userId]);
+    
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: "Σφάλμα στη φόρτωση προσωπικών κριτικών", details: err.message });
+  }
+});
+
 // ✅ Παίρνει αξιολογήσεις για μια συγκεκριμένη δραστηριότητα (Ανοιχτό)
 router.get('/:activity_id', async (req, res) => {
   try {

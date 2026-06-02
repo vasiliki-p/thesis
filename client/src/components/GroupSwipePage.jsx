@@ -13,6 +13,9 @@ export default function GroupSwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matches, setMatches] = useState([]);
   
+  // ΝΕΟ: Βάλαμε loading state για να ξέρουμε πότε τελείωσε το ψάξιμο
+  const [loading, setLoading] = useState(true);
+
   const [showMatchScreen, setShowMatchScreen] = useState(false);
   const [latestMatch, setLatestMatch] = useState(null);
 
@@ -35,9 +38,18 @@ export default function GroupSwipePage() {
     
     const fetchActivities = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/activities');
+        const token = localStorage.getItem("token");
+        // ΔΙΟΡΘΩΣΗ 1: Χτυπάμε το σωστό endpoint που καταλαβαίνει από Φίλτρα!
+        const res = await axios.get(`http://localhost:5000/api/group/activities/${sessionId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setActivities(res.data);
-      } catch (err) { console.error("Backend offline:", err); }
+      } catch (err) { 
+        console.error("Σφάλμα κατά τη φόρτωση καρτών:", err); 
+      } finally {
+        // Τελείωσε το ψάξιμο
+        setLoading(false);
+      }
     };
     fetchActivities();
 
@@ -88,16 +100,13 @@ export default function GroupSwipePage() {
     if (currentIndex >= activities.length) return;
     const currentActivity = activities[currentIndex];
     
-    // 1. Παίρνουμε το token στην αρχή της συνάρτησης
     const token = localStorage.getItem("token");
 
-    // 2. Ελέγχουμε αν υπάρχει, αλλιώς του λέμε να συνδεθεί
     if (!token) { 
       alert("Παρακαλώ συνδεθείτε ξανά."); 
       return; 
     }
 
-    // Ενεργοποίηση των Animations
     if (voteType === 'like') {
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 800);
@@ -106,7 +115,6 @@ export default function GroupSwipePage() {
     }
 
     try {
-      // 3. Στέλνουμε το αίτημα (χωρίς το userId) και με το token στα headers
       const res = await axios.post('http://localhost:5000/api/group/vote', 
         { 
           sessionId, 
@@ -125,14 +133,12 @@ export default function GroupSwipePage() {
       }
     } catch (err) { console.error("Σφάλμα στην ψήφο:", err); }
 
-    // Αλλαγή κάρτας μετά το animation
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
       setIsSkipping(false);
     }, voteType === 'like' ? 600 : 400); 
   };
 
-  // --- ΚΙΝΗΣΗ SWIPE (TOUCH & MOUSE) ---
   const handleDragStart = (e) => {
     touchStartX.current = e.clientX || (e.touches && e.touches[0].clientX);
   };
@@ -141,42 +147,72 @@ export default function GroupSwipePage() {
     touchEndX.current = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
     const swipeDistance = touchStartX.current - touchEndX.current;
     
-    // Αν έσυρε πάνω από 60 pixels
     if (swipeDistance > 60) {
-      handleVote('dislike'); // Σύρσιμο Αριστερά
+      handleVote('dislike'); 
     } else if (swipeDistance < -60) {
-      handleVote('like'); // Σύρσιμο Δεξιά
+      handleVote('like'); 
     }
   };
 
-  // --- ΛΟΓΙΚΗ DOUBLE TAP ---
   const handleDoubleTap = () => {
     const now = Date.now();
-    const DOUBLE_PRESS_DELAY = 300; // Χρόνος (σε ms) μεταξύ των 2 κλικ
+    const DOUBLE_PRESS_DELAY = 300;
     if (now - lastTapTime.current < DOUBLE_PRESS_DELAY) {
       handleVote('like'); 
     }
     lastTapTime.current = now;
   };
 
+  // -------------------------------------------------------------
+  // ΟΘΟΝΕΣ ΦΟΡΤΩΣΗΣ ΚΑΙ ΕΛΕΓΧΩΝ (ΠΡΙΝ ΦΤΑΣΟΥΜΕ ΣΤΙΣ ΚΑΡΤΕΣ)
+  // -------------------------------------------------------------
+  
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh", background: "var(--bg-color)" }}>
+        <div className="spinner-border" style={{ color: "var(--accent-color)", width: "3rem", height: "3rem" }}></div>
+      </div>
+    );
+  }
+
+  // ΔΙΟΡΘΩΣΗ 2: Το "Ειλικρινές" Empty State αν δεν υπάρχουν κάρτες για αυτά τα φίλτρα
+  if (!loading && activities.length === 0) {
+    return (
+      <div className="container d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "100vh", paddingTop: "80px", background: "var(--bg-color)" }}>
+        <div className="text-center p-5 bento-card shadow-lg" style={{ borderRadius: "30px", maxWidth: "450px" }}>
+          <div className="display-1 mb-3">🏜️</div>
+          <h3 className="fw-bold mb-3" style={{ color: "var(--text-main)" }}>Δεν βρέθηκε τίποτα!</h3>
+          <p className="text-muted mb-4">
+            Δεν υπάρχουν δραστηριότητες σε αυτή την περιοχή για το Vibe που επιλέξατε.
+          </p>
+          <button 
+            onClick={() => navigate('/lobbies')} 
+            className="btn w-100 py-3 rounded-pill fw-bold transition-btn shadow-sm"
+            style={{ background: "var(--accent-color)", color: "#000", fontSize: "1.1rem" }}
+          >
+             Επιστροφή στα Lobbies
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const currentActivity = activities[currentIndex];
 
-return (
-    /* 1. ΚΛΕΙΔΩΝΟΥΜΕ ΤΟ ΥΨΟΣ ΣΤΟ 100vh ΚΑΙ ΚΟΒΟΥΜΕ ΤΟ SCROLL (overflow: hidden) */
-    /* ΚΑΘΑΡΙΣΜΕΝΟ ΚΑΙ ΚΕΝΤΡΑΡΙΣΜΕΝΟ ΣΩΣΤΑ */
+  return (
     <div style={{ 
       width: '100%', display: 'flex', flexDirection: 'column', 
       alignItems: 'center', 
-      paddingTop: '20px', paddingBottom: '20px', overflow: 'hidden' 
+      paddingTop: '2px', paddingBottom: '20px', overflow: 'hidden' 
     }}>
       
-      {/* 2. HEADER (Πιο μαζεμένα κενά) */}
+      {/* HEADER */}
       <div className="text-center mb-3">
         <span className="urgency-badge mb-2 d-inline-block shadow-sm" onClick={copyToClipboard} style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem' }}>
             Session: #{sessionId} 📋
         </span>
         
-        <h2 style={{ fontWeight: 900, margin: '5px 0', letterSpacing: '-1px', fontSize: '1.8rem' }}>
+        <h2 style={{ fontWeight: 900, margin: '5px 0', letterSpacing: '-1px', fontSize: '1.8rem', color: "var(--text-main)" }}>
           Squad Sync <span style={{color: 'var(--accent-color)'}}>Pyxis</span>
         </h2>
 
@@ -201,16 +237,15 @@ return (
             onTouchStart={handleDragStart}
             onTouchEnd={handleDragEnd}
           >
-            {/* Overlay Καρδιάς (Νέο Σύμβολο) */}
+            {/* Overlay Καρδιάς */}
             <div className={`big-heart-overlay ${showHeart ? 'animate' : ''}`}>🧭</div>
             
-            {/* ΠΛΗΡΟΦΟΡΙΕΣ (Κλειδωμένα λευκά γράμματα με inline styles) */}
+            {/* ΠΛΗΡΟΦΟΡΙΕΣ */}
             <div className="tiktok-info">
               <span className="tag-pill m-0" style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', padding: '5px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', color: '#ffffff' }}>
                 {currentActivity.category || "Εξερεύνηση"}
               </span>
               
-              {/* 3. ΚΑΝΑΜΕ ΤΑ ΓΡΑΜΜΑΤΑ ΑΣΠΡΑ ΚΑΙ ΑΓΝΟΟΥΜΕ ΤΟ THEME */}
               <h2 style={{ color: '#ffffff', fontSize: '2.2rem', fontWeight: 900, textShadow: '0 4px 15px rgba(0,0,0,0.9)', margin: '10px 0 5px 0', lineHeight: 1.1 }}>
                 {getSafeTitle(currentActivity)}
               </h2>
@@ -239,13 +274,18 @@ return (
           
         </div>
       ) : (
-        /* ΟΤΑΝ ΤΕΛΕΙΩΣΟΥΝ ΟΙ ΕΠΙΛΟΓΕΣ */
-        <div className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ border: '2px dashed var(--card-border)', borderRadius: '30px', background: 'var(--card-bg)', width: '90%', maxWidth: '420px', height: '60vh' }}>
-          <div className="display-1 mb-3 opacity-50">👀</div>
-          <h3 className="fw-bold mb-2">Τα είδατε όλα!</h3>
-          <p className="text-muted">Περιμένετε την παρέα σας να ψηφίσει για να βγει το Match.</p>
-          <button onClick={() => navigate('/')} className="btn btn-outline-primary mt-4 rounded-pill px-5 py-2">
-             Αρχική
+       /* ΟΤΑΝ ΤΕΛΕΙΩΣΟΥΝ ΟΙ ΕΠΙΛΟΓΕΣ (Όταν κάνει swipe και την τελευταία κάρτα) */
+        <div className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ border: '2px dashed var(--accent-color)', borderRadius: '30px', background: 'var(--card-bg)', width: '90%', maxWidth: '420px', height: '60vh' }}>
+          <div className="display-1 mb-3">🏆</div>
+          <h3 className="fw-bold mb-2" style={{ color: 'var(--text-main)' }}>Τα είδατε όλα!</h3>
+          <p className="text-muted mb-4">Η ψηφοφορία σου ολοκληρώθηκε. Πάμε να δούμε τι αποφάσισε τελικά η παρέα!</p>
+          
+          <button 
+            onClick={() => navigate(`/match-results/${sessionId}`)} 
+            className="btn mt-2 rounded-pill px-5 py-3 fw-bold transition-btn shadow-lg"
+            style={{ background: 'var(--accent-color)', color: '#000', fontSize: '1.1rem' }}
+          >
+             Δες τα Αποτελέσματα 🔥
           </button>
         </div>
       )}
@@ -278,11 +318,11 @@ return (
             
             <h1 style={{ 
                 fontSize: '3.5rem', fontWeight: 900, 
-                background: 'linear-gradient(135deg, #17E0A0 0%, #00b8ff 100%)',
+                background: 'linear-gradient(135deg, var(--accent-color) 0%, #00b8ff 100%)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
                 margin: '0 0 5px 0', textAlign: 'center', filter: 'drop-shadow(0 10px 20px rgba(23, 224, 160, 0.3))'
               }}>
-                MATCH!
+              MATCH!
             </h1>
             
             <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.7)', marginBottom: '25px', textAlign: 'center', fontWeight: '500' }}>
@@ -301,7 +341,6 @@ return (
                 background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)'
               }}></div>
               
-              {/* 4. ΚΑΝΑΜΕ ΤΟ h3 ΣΕ div ΓΙΑ ΝΑ ΜΗΝ ΓΙΝΕΤΑΙ ΜΑΥΡΟ ΣΤΟ MATCH SCREEN */}
               <div style={{
                 position: 'absolute', bottom: '20px', left: '20px', right: '20px',
                 color: '#ffffff', fontWeight: 900, margin: 0, fontSize: '1.6rem',
@@ -315,7 +354,7 @@ return (
               <button 
                 onClick={() => navigate(`/activities/${latestMatch.id}`)} 
                 style={{
-                  background: '#17E0A0', color: '#000', border: 'none', borderRadius: '100px',
+                  background: 'var(--accent-color)', color: '#000', border: 'none', borderRadius: '100px',
                   padding: '16px', fontSize: '1.2rem', fontWeight: 900, cursor: 'pointer',
                   boxShadow: '0 10px 25px rgba(23, 224, 160, 0.4)', transition: 'all 0.2s'
                 }}

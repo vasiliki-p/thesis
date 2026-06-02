@@ -17,6 +17,7 @@ import Footer from './components/Footer';
 import GroupSwipePage from './components/GroupSwipePage';
 import LobbyRoom from './pages/LobbyRoom';
 import LobbyDiscovery from './pages/LobbyDiscovery';
+import MatchResultsPage from './pages/MatchResultsPage';
 
 function App() {
   const userData = localStorage.getItem('user');
@@ -76,6 +77,7 @@ function App() {
           <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
           <Route path="/group-swipe/:sessionId" element={<ProtectedRoute><GroupSwipePage userId={user?.id} /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
+          <Route path="/match-results/:sessionId" element={<ProtectedRoute><MatchResultsPage /></ProtectedRoute>} />
           
           {/* Το μέσα δωμάτιο (Chat) είναι κλειδωμένο! */}
           <Route path="/lobby/:id" element={<ProtectedRoute><LobbyRoom /></ProtectedRoute>} />

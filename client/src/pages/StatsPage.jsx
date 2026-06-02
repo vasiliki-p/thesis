@@ -19,11 +19,9 @@ export default function StatsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token"); // Παίρνουμε το Token
+        const token = localStorage.getItem("token"); 
         
-        // Φέρνουμε ΠΑΡΑΛΛΗΛΑ τα reviews του χρήστη και τις δραστηριότητες
         const [reviewsRes, activitiesRes] = await Promise.all([
-          // ΔΙΟΡΘΩΣΗ: Αφαιρέσαμε το ${userId} και βάλαμε το Token στα Headers
           axios.get(`http://localhost:5000/api/reviews/user`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
@@ -43,39 +41,39 @@ export default function StatsPage() {
     else setLoading(false);
   }, [userId]);
 
-  // --- Στατιστικά ---
-  const activityStats = reviews.reduce((acc, review) => {
-    // Βρίσκουμε το πραγματικό όνομα της δραστηριότητας από τη βάση
+  // --- Στατιστικά: Ομαδοποίηση ανά ΚΑΤΗΓΟΡΙΑ (Vibe) αντί για τίτλο ---
+  const categoryStats = reviews.reduce((acc, review) => {
     const foundActivity = activities.find(a => Number(a.id) === Number(review.activity_id));
-    const realTitle = foundActivity ? foundActivity.title : review.activity_title || `Activity #${review.activity_id}`;
+    // Αν δεν βρει κατηγορία, το βάζει στο "Άλλο"
+    const categoryName = foundActivity && foundActivity.category ? foundActivity.category : "Άλλο";
     
-    if (!acc[realTitle]) {
-      acc[realTitle] = {
-        fullName: realTitle,
-        // Κόβουμε το όνομα για τον άξονα Χ ώστε να μη χαλάει το design
-        shortName: realTitle.length > 12 ? realTitle.substring(0, 12) + "..." : realTitle,
-        value: 0,
-        avgRating: 0,
+    if (!acc[categoryName]) {
+      acc[categoryName] = {
+        name: categoryName,
+        shortName: categoryName.length > 12 ? categoryName.substring(0, 12) + "..." : categoryName,
+        value: 0, // Πόσες φορές έχει πάει σε αυτή την κατηγορία
         totalRating: 0,
+        avgRating: 0,
       };
     }
-    acc[realTitle].value += 1;
-    acc[realTitle].totalRating += review.rating;
-    acc[realTitle].avgRating = Number((acc[realTitle].totalRating / acc[realTitle].value).toFixed(1));
+    acc[categoryName].value += 1;
+    acc[categoryName].totalRating += review.rating;
+    acc[categoryName].avgRating = Number((acc[categoryName].totalRating / acc[categoryName].value).toFixed(1));
     return acc;
   }, {});
 
-  const chartData = Object.values(activityStats);
+  const chartData = Object.values(categoryStats);
 
   const averageRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : "-";
 
-  const mostPopular = chartData.length > 0
+  // Πλέον το most popular είναι το αγαπημένο του "Vibe" (αυτό με τα περισσότερα reviews)
+  const favoriteVibe = chartData.length > 0
     ? chartData.reduce(
         (prev, current) => (prev.value > current.value ? prev : current),
         chartData[0]
-      ).fullName
+      ).name
     : "-";
 
   const totalReviews = reviews.length;
@@ -106,7 +104,6 @@ export default function StatsPage() {
   return (
     <div className="container position-relative mt-5" style={{ zIndex: 1 }}>
       
-      {/* Background blobs */}
       <div className="position-absolute" style={{ width: '400px', height: '400px', background: 'var(--accent-color)', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.1', top: '10%', right: '10%', zIndex: -1 }}></div>
 
       <div className="text-center mb-5">
@@ -120,7 +117,7 @@ export default function StatsPage() {
         </p>
       </div>
 
-      {/* --- TOP SUMMARY CARDS (Bento Style) --- */}
+      {/* --- TOP SUMMARY CARDS --- */}
       <div className="row g-4 mb-5">
         <div className="col-md-4">
           <div className="card shadow-sm border-0 rounded-4 p-4 h-100 transition-btn d-flex flex-row align-items-center gap-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '24px' }}>
@@ -141,7 +138,7 @@ export default function StatsPage() {
             </div>
             <div>
               <h6 className="mb-1 fw-bold" style={{ color: 'var(--text-muted)' }}>Μέσο Rating</h6>
-              <h2 className="fw-bold mb-0" style={{ color: 'var(--text-main)' }}>{averageRating}</h2>
+              <h2 className="fw-bold mb-0" style={{ color: 'var(--text-main)' }}>{averageRating} <span style={{fontSize: '1rem', color: 'var(--text-muted)'}}>/ 5</span></h2>
             </div>
           </div>
         </div>
@@ -152,8 +149,8 @@ export default function StatsPage() {
               <TrophyFill size={28} />
             </div>
             <div className="overflow-hidden">
-              <h6 className="mb-1 fw-bold" style={{ color: 'var(--text-muted)' }}>Πιο Δημοφιλής</h6>
-              <h5 className="fw-bold mb-0 text-truncate" style={{ color: 'var(--text-main)' }} title={mostPopular}>{mostPopular}</h5>
+              <h6 className="mb-1 fw-bold" style={{ color: 'var(--text-muted)' }}>Αγαπημένο Vibe</h6>
+              <h5 className="fw-bold mb-0 text-truncate" style={{ color: 'var(--text-main)' }} title={favoriteVibe}>{favoriteVibe}</h5>
             </div>
           </div>
         </div>
@@ -169,14 +166,14 @@ export default function StatsPage() {
           {/* PIE CHART */}
           <div className="col-lg-6">
             <div className="card shadow-sm border-0 p-4 h-100" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '32px' }}>
-              <h5 className="fw-bold mb-4" style={{ color: 'var(--text-main)' }}>📌 Κατανομή Κριτικών</h5>
+              <h5 className="fw-bold mb-4" style={{ color: 'var(--text-main)' }}>📌 Οι Εμπειρίες μου</h5>
               <div style={{ width: '100%', height: '320px' }}>
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie
                       data={chartData}
                       dataKey="value"
-                      nameKey="fullName"
+                      nameKey="name"
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
@@ -185,7 +182,7 @@ export default function StatsPage() {
                       label={{ fill: 'var(--text-main)', fontSize: 12 }}
                     >
                       {chartData.map((entry, index) => (
-                        <Cell key={`cell-${entry.fullName}`} fill={COLORS[index % COLORS.length]} stroke="var(--card-bg)" strokeWidth={2} />
+                        <Cell key={`cell-${entry.name}`} fill={COLORS[index % COLORS.length]} stroke="var(--card-bg)" strokeWidth={2} />
                       ))}
                     </Pie>
                     <Tooltip 
@@ -202,12 +199,11 @@ export default function StatsPage() {
           {/* BAR CHART */}
           <div className="col-lg-6">
             <div className="card shadow-sm border-0 p-4 h-100" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '32px' }}>
-              <h5 className="fw-bold mb-4" style={{ color: 'var(--text-main)' }}>⭐ Μέσο Rating ανά Δραστηριότητα</h5>
+              <h5 className="fw-bold mb-4" style={{ color: 'var(--text-main)' }}>⭐ Βαθμολογία ανά Vibe</h5>
               <div style={{ width: '100%', height: '320px' }}>
                 <ResponsiveContainer>
                   <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 25 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
-                    {/* ΝΕΟΣ ΑΞΟΝΑΣ Χ - Εμφανίζει τα ονόματα υπό γωνία */}
                     <XAxis 
                       dataKey="shortName" 
                       stroke="var(--text-muted)" 
@@ -216,12 +212,16 @@ export default function StatsPage() {
                       angle={-25}
                       textAnchor="end"
                     />
-                    <YAxis stroke="var(--text-muted)" tick={{ fill: 'var(--text-muted)' }} />
+                    <YAxis stroke="var(--text-muted)" tick={{ fill: 'var(--text-muted)' }} domain={[0, 5]} />
                     <Tooltip 
                       cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                       contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '12px', color: 'var(--text-main)' }}
                     />
-                    <Bar dataKey="avgRating" fill="var(--accent-color)" radius={[6, 6, 0, 0]} barSize={40} />
+                    <Bar dataKey="avgRating" fill="var(--accent-color)" radius={[6, 6, 0, 0]} barSize={40}>
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>

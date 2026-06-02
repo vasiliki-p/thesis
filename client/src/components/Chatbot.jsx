@@ -9,7 +9,6 @@ function Chatbot() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Sonar: symmetrical naming for useState pair
   const [isOpen, setIsOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
@@ -28,7 +27,6 @@ function Chatbot() {
     const userMessage = input;
     setInput("");
 
-    // ✅ Sonar: avoid array index key by giving each message a stable id
     const userMsgObj = {
       id: `user-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       from: "user",
@@ -49,7 +47,6 @@ function Chatbot() {
 
       setMessages((prev) => [...prev, aiMsgObj]);
     } catch (err) {
-      // ✅ Sonar: handle exception meaningfully
       console.error("Chatbot request failed:", err);
 
       setMessages((prev) => [
