@@ -214,7 +214,8 @@ io.on('connection', (socket) => {
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'client/build')));
 }   
-
+ 
+// --- 5. ROUTES SETUP ---
 // --- 5. ROUTES SETUP ---
 app.use('/api', authRoutes);
 app.use('/api/activities', activitiesRoutes);
@@ -225,17 +226,20 @@ app.use("/api/favourites", favouritesRoute);
 app.use("/api/history", historyRoute);
 app.use('/api/group', groupRoutes);
 
+// Αν είμαστε σε production, σέρβιρε το React app για όλα τα υπόλοιπα paths
 if (process.env.NODE_ENV === 'production') {
-app.get('/*', (req, res) => {    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  });
+} else {
+  // Για το local development (XAMPP), δείξε το μήνυμα
+  app.get('/', (req, res) => {
+    res.send('Pyxis Backend is running correctly!');
   });
 }
 
-app.get('/', (req, res) => {
-    res.send('Pyxis Backend is running correctly with Public Lobbies!');
-});
-
 // --- 6. SERVER START ---
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Χρησιμοποίησε το PORT που δίνει το Render
 server.listen(PORT, () => {
-    console.log(`🚀 Server is LIVE on http://localhost:${PORT}`);
+    console.log(`🚀 Server is LIVE on port ${PORT}`);
 });

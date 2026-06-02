@@ -78,7 +78,7 @@ export default function SuggestionsPage() {
   };
 
   return (
-    <div className="container py-5 mt-5">
+    <div className="container py-5">
       
       {/* --- ΔΙΟΡΘΩΜΕΝΟ HEADER --- */}
       <div className="text-center mb-5">
