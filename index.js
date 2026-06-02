@@ -216,7 +216,6 @@ if (process.env.NODE_ENV === 'production') {
 }   
  
 // --- 5. ROUTES SETUP ---
-// --- 5. ROUTES SETUP ---
 app.use('/api', authRoutes);
 app.use('/api/activities', activitiesRoutes);
 app.use('/api/reviews', reviewsRoutes);
@@ -226,20 +225,27 @@ app.use("/api/favourites", favouritesRoute);
 app.use("/api/history", historyRoute);
 app.use('/api/group', groupRoutes);
 
-// Αν είμαστε σε production, σέρβιρε το React app για όλα τα υπόλοιπα paths
+// ΕΔΩ ΕΙΝΑΙ Η ΑΛΛΑΓΗ ΠΟΥ ΑΠΟΦΕΥΓΕΙ ΤΟ ΑΣΤΕΡΑΚΙ (*)
 if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  // Σερβίρουμε τα στατικά αρχεία από το build
+  app.use(express.static(path.join(__dirname, 'client/build')));
+
+  // Αντί για app.get('*', ...), χρησιμοποιούμε middleware για όλα τα requests
+  app.use((req, res, next) => {
+    // Αν το request δεν είναι API, στείλε το index.html
+    if (!req.path.startsWith('/api')) {
+      return res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+    }
+    next(); // Αν είναι API, προχώρα κανονικά
   });
 } else {
-  // Για το local development (XAMPP), δείξε το μήνυμα
   app.get('/', (req, res) => {
     res.send('Pyxis Backend is running correctly!');
   });
 }
 
 // --- 6. SERVER START ---
-const PORT = process.env.PORT || 5000; // Χρησιμοποίησε το PORT που δίνει το Render
+const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
     console.log(`🚀 Server is LIVE on port ${PORT}`);
 });
