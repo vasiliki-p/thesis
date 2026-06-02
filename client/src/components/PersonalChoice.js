@@ -31,7 +31,6 @@ const PersonalChoice = () => {
 
         setHasProfile(true);
 
-        // --- ΝΕΟΣ, ΑΥΣΤΗΡΟΣ ΑΛΓΟΡΙΘΜΟΣ ΤΑΙΡΙΑΣΜΑΤΟΣ ---
         const selected = allActivities
           .map(act => {
             let score = 0;

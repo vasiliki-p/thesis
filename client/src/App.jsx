@@ -58,7 +58,7 @@ function App() {
       {/* Το Navbar είναι ΟΡΑΤΟ ΣΕ ΟΛΟΥΣ */}
       <Navbar />
 
-      <div style={{ minHeight: '80vh' }}>
+       <main style={{ width: '100%' }}>
         <Routes>
           {/* 🔓 ΕΛΕΥΘΕΡΗ ΠΡΟΣΒΑΣΗ (Public Routes) */}
           <Route path="/" element={<HomePage />} />
@@ -82,7 +82,7 @@ function App() {
           
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </div>
+        </main>
 
       {isAuthenticated && <Chatbot />}
       

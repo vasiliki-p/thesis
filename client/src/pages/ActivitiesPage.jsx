@@ -50,7 +50,7 @@ export default function ActivitiesPage() {
   );
 
   return (
-    <div className="container position-relative py-5 mt-5" style={{ minHeight: '100vh', zIndex: 1 }}>
+    <div className="container position-relative mt-5" style={{ minHeight: '100vh', zIndex: 1 }}>
       
       {/* Background blobs */}
       <div className="position-absolute" style={{ width: '400px', height: '400px', background: 'var(--accent-color)', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.1', top: '0', left: '10%', zIndex: -1 }}></div>

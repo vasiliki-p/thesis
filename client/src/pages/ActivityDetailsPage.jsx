@@ -88,7 +88,7 @@ export default function ActivityDetailsPage() {
   if (!activity) return null;
 
   return (
-    <div style={{ minHeight: '100vh', paddingBottom: '100px', paddingTop: '100px' }}>
+    <div style={{ minHeight: '100vh', paddingBottom: '100px', paddingTop: '30px' }}>
       <div className="container">
         
         {/* --- 1. HEADER & TOP INFO --- */}

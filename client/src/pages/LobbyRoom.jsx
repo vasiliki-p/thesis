@@ -113,7 +113,7 @@ useEffect(() => {
 }, [messages]);
 
   return (
-    <div className="container" style={{ paddingTop: "100px", paddingBottom: "100px", display: "flex", flexDirection: "column", gap: "24px" }}>
+    <div className="container" style={{ paddingTop: "30px", paddingBottom: "100px", display: "flex", flexDirection: "column", gap: "24px" }}>
       <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-2">
        <div className="d-flex align-items-center gap-3">
           {/* 1. Απλό, κυκλικό κουμπί Πίσω */}

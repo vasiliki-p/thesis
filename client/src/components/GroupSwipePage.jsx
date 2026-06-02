@@ -163,10 +163,11 @@ export default function GroupSwipePage() {
 
 return (
     /* 1. ΚΛΕΙΔΩΝΟΥΜΕ ΤΟ ΥΨΟΣ ΣΤΟ 100vh ΚΑΙ ΚΟΒΟΥΜΕ ΤΟ SCROLL (overflow: hidden) */
+    /* ΚΑΘΑΡΙΣΜΕΝΟ ΚΑΙ ΚΕΝΤΡΑΡΙΣΜΕΝΟ ΣΩΣΤΑ */
     <div style={{ 
-      height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', 
-      alignItems: 'center', justifyContent: 'center', 
-      paddingTop: '70px', overflow: 'hidden' 
+      width: '100%', display: 'flex', flexDirection: 'column', 
+      alignItems: 'center', 
+      paddingTop: '20px', paddingBottom: '20px', overflow: 'hidden' 
     }}>
       
       {/* 2. HEADER (Πιο μαζεμένα κενά) */}

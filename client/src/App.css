@@ -590,19 +590,7 @@ footer {
   justify-content: center;
   overflow: hidden;
 }
-/* Προσθήκη στο App.css για το Navbar */
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: var(--card-bg); 
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--card-border);
-  transition: all 0.3s ease;
-  padding-top: 15px;
-  padding-bottom: 15px;
-}
+
 /* Η ακτίνα που γυρνάει (Scanner) */
 .radar-scanner {
   position: absolute;
@@ -903,11 +891,11 @@ footer {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: -1; /* Μένει πάντα πίσω από το περιεχόμενο */
+  width: 100%;  /* <--- ΑΛΛΑΓΗ: Από 100vw σε 100% */
+  height: 100%; /* <--- ΑΛΛΑΓΗ: Από 100vh σε 100% */
+  z-index: -1; 
   overflow: hidden;
-  background: var(--bg-color); /* Το βασικό χρώμα του θέματος */
+  background: var(--bg-color); 
   transition: background 0.8s ease;
 }
 
@@ -940,7 +928,15 @@ footer {
   top: 40%; left: 30%;
   animation-delay: -10s;
 }
-
+/* Το απόλυτο fix για το Chrome Autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    caret-color: var(--text-main) !important;
+}
 /* Η κίνηση του υγρού (μορφοποιείται και αλλάζει θέση) */
 @keyframes liquidMotion {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }

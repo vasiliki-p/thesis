@@ -123,7 +123,7 @@ export default function UserProfilePage() {
   if (loading) return <div className="d-flex justify-content-center align-items-center vh-100"><LoadingSpinner /></div>;
 
   return (
-    <div className="container" style={{ paddingTop: '100px', paddingBottom: '80px', minHeight: '100vh' }}>
+    <div className="container" style={{ paddingTop: '30px', paddingBottom: '80px', minHeight: '100vh' }}>
       
       <div className="row g-4">
         

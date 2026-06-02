@@ -73,7 +73,7 @@ export default function LobbyDiscovery() {
   };
 
   return (
-    <div className="container position-relative" style={{ paddingTop: '120px', paddingBottom: '80px', minHeight: '100vh', zIndex: 1 }}>
+    <div className="container position-relative" style={{ paddingTop: '30px', paddingBottom: '80px', minHeight: '100vh', zIndex: 1 }}>
       
       {/* --- HEADER & LIVE RADAR ANIMATION --- */}
       <div className="text-center mb-5">
