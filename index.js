@@ -210,7 +210,11 @@ io.on('connection', (socket) => {
         }
     });
 });
-    
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'client/build')));
+}   
+
 // --- 5. ROUTES SETUP ---
 app.use('/api', authRoutes);
 app.use('/api/activities', activitiesRoutes);
@@ -220,6 +224,12 @@ app.use('/api/user', userRoutes);
 app.use("/api/favourites", favouritesRoute);
 app.use("/api/history", historyRoute);
 app.use('/api/group', groupRoutes);
+
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  });
+}
 
 app.get('/', (req, res) => {
     res.send('Pyxis Backend is running correctly with Public Lobbies!');
