@@ -13,55 +13,51 @@ try {
     console.warn("Groq Init Warning: API Key missing."); 
 }
 
-// 1: SMART SUGGESTIONS (Hybrid RAG: JS Filtering + AI Semantic Matching)
+// έξυπνες προτάσεις με βάση τον καιρό και τα ενδιαφέροντα
 router.post("/suggest", async (req, res) => {
   const { interests, location, budget, weather } = req.body; 
 
   try {
-    // 1. Φέρνουμε όλες τις δραστηριότητες από τη βάση
-    const [allActivities] = await db.query("SELECT * FROM activities");
+    // φέρνουμε όλες τις δραστηριότητες από τη βάση
+    const [activities] = await db.query("SELECT * FROM activities");
 
-    // ==========================================
-    // ΒΗΜΑ 1: PRE-FILTERING (Ο Αυστηρός Κόφτης της JavaScript)
-    // ==========================================
-    let filteredActivities = allActivities;
-// Έξυπνος Κόφτης Τοποθεσίας (Αγνοεί τόνους και κεφαλαία)
+    let filteredActs = activities;
+
+    // φίλτρο για τοποθεσία (αγνοούμε τόνους και κεφαλαία)
     if (location) {
-        // Συνάρτηση που αφαιρεί τόνους και κάνει τα γράμματα πεζά
-        const normalizeGreek = (text) => {
+        // συνάρτηση που αφαιρεί τόνους και κάνει τα γράμματα πεζά
+        const normalize = (text) => {
             return text ? text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
         };
 
-        const locClean = normalizeGreek(location).trim();
+        const locClean = normalize(location).trim();
         
-        filteredActivities = filteredActivities.filter(a => {
-            const dbLocClean = normalizeGreek(a.location);
+        filteredActs = filteredActs.filter(a => {
+            const dbLocClean = normalize(a.location);
             return dbLocClean.includes(locClean) || locClean.includes(dbLocClean);
         });
     }
-    // Κόφτης Budget: Κρατάει ΜΟΝΟ όσα κοστίζουν ίσα ή λιγότερα από το όριο
+
+    // φίλτρο για budget (όσα κοστίζουν ίσα ή λιγότερα από το όριο)
     if (budget && !isNaN(budget)) {
         const maxBudget = Number(budget);
-        filteredActivities = filteredActivities.filter(a => Number(a.cost) <= maxBudget);
+        filteredActs = filteredActs.filter(a => Number(a.cost) <= maxBudget);
     }
+    // αν δεν βρέθηκε τίποτα σταματάμε εδώ για οικονομία στα tokens της AI
 
-    // Αν μετά τον κόφτη δεν έμεινε τίποτα (π.χ. έψαξε "Καβάλα"), επιστρέφουμε αμέσως κενό!
-    // Γλιτώνουμε και χρόνο, και τζάμπα AI Tokens.
-    if (filteredActivities.length === 0) {
+    if (filteredActs.length === 0) {
         return res.json({ suggestions: [] });
     }
 
-    // Κρατάμε μόνο τα απαραίτητα για την AI για όσα ΕΠΙΒΙΩΣΑΝ
-    const simplifiedActivities = filteredActivities.map(a => ({
+    // κρατάμε μόνο τα βασικά για να μην μπερδευτεί το μοντέλο
+    const simpleActs = filteredActs.map(a => ({
         id: a.id, 
         title: a.title, 
         outdoor: a.outdoor, 
         tags: a.tags
     }));
 
-    // ==========================================
-    // ΒΗΜΑ 2: SYSTEM PROMPT (Μόνο Vibe & Καιρός πλέον)
-    // ==========================================
+    // οδηγίες προς την AI
     const systemPrompt = `
       Είσαι ο "Pyxis AI", ένας κορυφαίος ταξιδιωτικός σύμβουλος για την Ελλάδα.
       ΣΗΜΑΝΤΙΚΟ: Τα δεδομένα που λαμβάνεις έχουν ΗΔΗ περάσει από αυστηρό έλεγχο budget και τοποθεσίας. Μην ασχολείσαι με αυτούς τους παράγοντες.
@@ -86,19 +82,16 @@ router.post("/suggest", async (req, res) => {
       }
     `;
 
-    // ==========================================
-    // ΒΗΜΑ 3: USER PROMPT & ΚΛΗΣΗ AI
-    // ==========================================
     const userPrompt = `
       ΔΕΔΟΜΕΝΑ ΧΡΗΣΤΗ:
       - Καιρός: "${weather || 'Clear'}"
       - Ενδιαφέροντα / Διάθεση: "${interests || 'Οτιδήποτε ενδιαφέρον'}"
       
       ΔΙΑΘΕΣΙΜΕΣ ΔΡΑΣΤΗΡΙΟΤΗΤΕΣ (JSON):
-      ${JSON.stringify(simplifiedActivities)}
+      ${JSON.stringify(simpleActs)}
     `;
 
-    const chatCompletion = await groq.chat.completions.create({
+    const completion = await groq.chat.completions.create({
         messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
@@ -108,32 +101,35 @@ router.post("/suggest", async (req, res) => {
         response_format: { type: "json_object" }
     });
 
-    const parsed = JSON.parse(chatCompletion.choices[0]?.message?.content || "{}");
+    const parsed = JSON.parse(completion.choices[0]?.message?.content || "{}");
     
-    // Ενώνουμε την απάντηση του AI με τα πλήρη δεδομένα
-    const finalSuggestions = (parsed.matches || []).map(match => {
-        const activity = allActivities.find(a => a.id === match.id);
+    // ενώνουμε τα αποτελέσματα του AI με τα πλήρη δεδομένα της βάσης μας
+    const finalSug = (parsed.matches || []).map(match => {
+        const activity = filteredActs.find(a => a.id === match.id);
         return activity ? { ...activity, ai_score: match.ai_score, ai_reason: match.reason } : null;
     }).filter(a => a !== null);
 
-    // Ταξινομούμε φθίνουσα βάσει του ai_score
-    finalSuggestions.sort((a, b) => b.ai_score - a.ai_score);
+    // ταξινόμηση φθίνουσα βάσει του ai_score
+    
+    finalSug.sort((a, b) => b.ai_score - a.ai_score);
 
-    res.json({ suggestions: finalSuggestions });
+    res.json({ suggestions: finalSug });
 
   } catch (err) {
     console.error("Groq Error:", err);
     res.json({ suggestions: [], error: "AI matching failed" });
   }
 });
-// 2: CHATBOT (Context Aware)
+
+
+// λειτουργία chatbot
 router.post("/chatbot", async (req, res) => {
     const { message } = req.body;
     
     try {
         const [activities] = await db.query("SELECT id, title, location FROM activities");
         
-        // Καθαρή λίστα με αλλαγές γραμμής
+        // φτιάχνουμε μια λίστα με τα links για το prompt
         const activitiesList = activities.map(a => `- ${a.title} (Περιοχή: ${a.location}) -> LINK: {{LINK:/activities/${a.id}}}`).join("\n");
 
         const systemPrompt = `
@@ -156,7 +152,7 @@ router.post("/chatbot", async (req, res) => {
                 { role: "user", content: message }
             ],
             model: "llama-3.3-70b-versatile",
-            temperature: 0.0 // 0.0 = Απόλυτη υπακοή στους κανόνες, καθόλου φαντασία.
+            temperature: 0.0 // 0.0 = απόλυτη υπακοή στους κανόνες, καθόλου φαντασία.
         });
 
         res.json({ reply: response.choices[0]?.message?.content });

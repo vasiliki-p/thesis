@@ -84,17 +84,44 @@ export default function UserProfilePage() {
     fetchData();
   }, [profile.id, token]);
 
-  const handleRemoveFav = async (activityId) => {
-    if (!window.confirm("Σίγουρα θες να το διαγράψεις από τα αγαπημένα;")) return;
-    try {
-      // 3. Στέλνουμε το token στα headers και βγάζουμε το user_id από το body!
-      await axios.delete("/api/favourites/remove", { 
-          headers: { Authorization: `Bearer ${token}` },
-          data: { activity_id: activityId } 
-      });
-      toast.success("✅ Η δραστηριότητα αφαιρέθηκε από τα αγαπημένα.");
-      setFavourites((prev) => prev.filter((f) => f.id !== activityId));
-    } catch (err) { toast.error("❌ Κάτι πήγε στραβά με τη διαγραφή."); }
+const handleRemoveFav = (activityId) => {
+    // Φτιάχνουμε ένα custom toast με HTML (κουμπιά) μέσα του!
+    toast((t) => (
+      <div className="d-flex flex-column align-items-center gap-2 p-2">
+        <span className="fw-bold text-center" style={{ color: "var(--text-main)" }}>
+          Σίγουρα θες να διαγράψεις τη δραστηριότητα;
+        </span>
+        <div className="d-flex gap-2 mt-2">
+          <button
+            className="btn btn-sm btn-danger rounded-pill px-3 fw-bold"
+            onClick={async () => {
+              toast.dismiss(t.id); // 1. Κλείνει το toast ερώτησης
+              
+              // 2. Κάνει τη διαγραφή στο Backend
+              try {
+                await axios.delete("/api/favourites/remove", { 
+                    headers: { Authorization: `Bearer ${token}` },
+                    data: { activity_id: activityId } 
+                });
+                toast.success("Η δραστηριότητα αφαιρέθηκε!"); // 3. Νέο toast επιτυχίας!
+                setFavourites((prev) => prev.filter((f) => f.id !== activityId));
+              } catch (err) { 
+                toast.error("❌ Κάτι πήγε στραβά με τη διαγραφή."); 
+              }
+            }}
+          >
+            Ναι, διαγραφή
+          </button>
+          
+          <button
+            className="btn btn-sm btn-secondary rounded-pill px-3 fw-bold"
+            onClick={() => toast.dismiss(t.id)} // Απλά κλείνει το toast ερώτησης
+          >
+            Ακύρωση
+          </button>
+        </div>
+      </div>
+    ), { duration: 6000 }); // Το αφήνουμε 6 δευτερόλεπτα ανοιχτό για να προλάβει να πατήσει
   };
 
   const enableEdit = (field) => {

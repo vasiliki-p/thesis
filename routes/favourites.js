@@ -1,36 +1,37 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db"); 
-const authenticateToken = require("../middleware/auth"); // Εισαγωγή middleware
+const authenticateToken = require("../middleware/auth"); 
 
-// Εφαρμογή του middleware σε ΟΛΑ τα παρακάτω routes του αρχείου
+// όλα τα routes εδώ θέλουν login
 router.use(authenticateToken);
 
-// 1. Έλεγχος (GET)
+// τσεκάρουμε αν το έχει ήδη στα αγαπημένα
 router.get("/check", async (req, res) => {
   const { activity_id } = req.query;
-  const user_id = req.user.id; // Προέρχεται με ασφάλεια από το JWT token
+  const user_id = req.user.id; // με ασφάλεια από το JWT token
 
   if (!activity_id) {
     return res.status(400).json({ error: "Λείπει η παράμετρος activity_id" });
   }
 
   try {
-    const [rows] = await db.query(
+    const [data] = await db.query(
       "SELECT * FROM favourites WHERE user_id = ? AND activity_id = ?",
       [user_id, activity_id]
     );
-    res.json({ isLiked: rows.length > 0 });
+    // αν βρήκε έστω και ένα αποτέλεσμα, επιστρέφει true
+    res.json({ isLiked: data.length > 0 });
   } catch (err) {
     console.error("DB Error:", err);
     res.status(500).json({ error: "Σφάλμα βάσης δεδομένων", details: err.message });
   }
 });
 
-// 2. Προσθήκη (POST)
+// προσθήκη στα αγαπημένα
 router.post("/add", async (req, res) => {
   const { activity_id } = req.body;
-  const user_id = req.user.id; // Προέρχεται από το JWT token
+  const user_id = req.user.id; // JWT token
 
   if (!activity_id) {
     return res.status(400).json({ error: "Λείπει το activity_id" });
@@ -44,10 +45,10 @@ router.post("/add", async (req, res) => {
   }
 });
 
-// 3. Αφαίρεση (DELETE)
+// αφαίρεση από τα αγαπημένα
 router.delete("/remove", async (req, res) => {
   const { activity_id } = req.body;
-  const user_id = req.user.id; // Προέρχεται από το JWT token
+  const user_id = req.user.id; //  από το JWT token
 
   if (!activity_id) {
     return res.status(400).json({ error: "Λείπει το activity_id" });
@@ -61,15 +62,15 @@ router.delete("/remove", async (req, res) => {
   }
 });
 
-// 4. Λήψη όλων των αγαπημένων του συνδεδεμένου χρήστη
+// φέρνουμε όλα τα αγαπημένα του χρήστη
 router.get("/", async (req, res) => {
-  const user_id = req.user.id; // Ασφαλές, κανείς δεν μπορεί να ζητήσει αγαπημένα άλλου χρήστη άλλαζοντας το URL
+  const user_id = req.user.id; 
   try {
-    const [rows] = await db.query(
+    const [data] = await db.query(
       "SELECT activity_id FROM favourites WHERE user_id = ?", 
       [user_id]
     );
-    const ids = rows.map(row => row.activity_id);
+    const ids = data.map(row => row.activity_id);
     res.json(ids); 
   } catch (err) {
     console.error("DB Error:", err);

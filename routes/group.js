@@ -3,13 +3,15 @@ const router = express.Router();
 const db = require('../db'); 
 const authenticateToken = require("../middleware/auth"); 
 
-// Προστατεύουμε όλες τις διαδρομές των groups (μόνο συνδεδεμένοι χρήστες)
+//  (μόνο συνδεδεμένοι χρήστες)
 router.use(authenticateToken);
 
-// --- 1. ΔΗΜΙΟΥΡΓΙΑ ΝΕΑΣ ΠΑΡΕΑΣ (Session) ---
+// δημιουργία δωματίου (session)
 router.post('/create', async (req, res) => {
     const { isPublic, lobbyName, lobbyType, lobbyLocation } = req.body;
     const hostId = req.user.id; 
+
+    // φτιάχνουμε ένα 6ψήφιο pin
     const pin = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     try {
@@ -26,7 +28,7 @@ router.post('/create', async (req, res) => {
     }
 });
 
-// --- 1.5 ΕΥΡΕΣΗ ΑΝΟΙΧΤΩΝ LOBBIES ΓΙΑ ΤΟ ΡΑΝΤΑΡ ---
+// φέρνει τα ανοιχτά lobbies για το ραντάρ
 router.get('/active', async (req, res) => {
     try {
         const [lobbies] = await db.query(`
@@ -49,7 +51,7 @@ router.get('/active', async (req, res) => {
     }
 });
 
-// --- 2. ΨΗΦΟΦΟΡΙΑ & ΕΛΕΓΧΟΣ MATCH (Δυναμικός Αλγόριθμος) ---
+// καταγραφή ψήφου (like/dislike) και realtime έλεγχος για match
 router.post('/vote', async (req, res) => {
     const { sessionId, activityId, voteType } = req.body;
     const userId = req.user.id; 
@@ -64,6 +66,7 @@ router.post('/vote', async (req, res) => {
         `, [sessionId, userId, activityId, voteType, voteType]);
 
         if (voteType === 'like') {
+            // μετράμε πόσοι είμαστε στο δωμάτιο
             const [totalUsersRes] = await db.query(`
                 SELECT COUNT(DISTINCT user_id) as totalUsers 
                 FROM group_votes 
@@ -71,6 +74,7 @@ router.post('/vote', async (req, res) => {
             `, [sessionId]);
             const totalUsers = totalUsersRes[0].totalUsers;
 
+            // μετράμε πόσα likes έχει αυτό το activity
             const [likesRes] = await db.query(`
                 SELECT COUNT(*) as totalLikes 
                 FROM group_votes 
@@ -78,6 +82,7 @@ router.post('/vote', async (req, res) => {
             `, [sessionId, activityId]);
             const totalLikes = likesRes[0].totalLikes;
 
+            // αν όλοι πάτησαν like, έχουμε match!
             if (totalUsers > 1 && totalLikes === totalUsers) { 
                 isMatch = true;
             }
@@ -91,7 +96,7 @@ router.post('/vote', async (req, res) => {
     }
 });
 
-// --- 3. SESSION SUMMARY ---
+// σύνοψη δωματίου
 router.get('/session-summary/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     try {
@@ -108,7 +113,7 @@ router.get('/session-summary/:sessionId', async (req, res) => {
     }
 });
 
-// --- 4. ΠΛΗΡΟΦΟΡΙΕΣ LOBBY ---
+// info για το lobby με βάση το pin
 router.get('/info/:pin', async (req, res) => {
     try {
         const [lobby] = await db.query(
@@ -127,7 +132,7 @@ router.get('/info/:pin', async (req, res) => {
     }
 });
 
-// --- 5. GET SWIPE CARDS (ΑΥΣΤΗΡΟ αλλά ΕΛΑΣΤΙΚΟ MATCH στα γράμματα) ---
+// μοιράζει κάρτες για swipe (δυναμικό filtering)
 router.get('/activities/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     try {
@@ -144,7 +149,8 @@ router.get('/activities/:sessionId', async (req, res) => {
         const roomLocation = sessionData[0].location ? sessionData[0].location.trim() : "";
 
         console.log(`🔍 Μοιράζω κάρτες για: Κατηγορία="${roomCategory}", Περιοχή="${roomLocation}"`);
-
+        
+        // ψάχνουμε με LIKE για να πιάνει ορθογραφικά κλπ
         const [activities] = await db.query(`
             SELECT * FROM activities 
             WHERE category LIKE ? AND location LIKE ? 
@@ -158,16 +164,16 @@ router.get('/activities/:sessionId', async (req, res) => {
     }
 });
 
-// --- 6. GET MATCH RESULTS (Εδώ υπολογίζεται ο Νικητής!) ---
+// υπολογισμός αποτελεσμάτων (ranking) στο τέλος
 router.get('/swipe/results/:sessionId', async (req, res) => {
     const { sessionId } = req.params;
     try {
-      const [usersResult] = await db.query(
+      const [usersRes] = await db.query(
         'SELECT COUNT(DISTINCT user_id) as totalUsers FROM group_votes WHERE session_id = ?',
         [String(sessionId)]
       );
       
-      const maxVotes = usersResult[0].totalUsers || 1; 
+      const maxVotes = usersRes[0].totalUsers || 1; 
   
       const [results] = await db.query(`
         SELECT 
@@ -183,12 +189,12 @@ router.get('/swipe/results/:sessionId', async (req, res) => {
         ORDER BY votes DESC
       `, [String(sessionId)]);
   
-      const formattedResults = results.map(row => ({
+      const finalRes = results.map(row => ({
         ...row,
         maxVotes: maxVotes
       }));
   
-      res.json(formattedResults);
+      res.json(finalRes);
     } catch (err) {
       console.error("Σφάλμα κατά την ανάκτηση των Match Results:", err);
       res.status(500).json({ error: "Σφάλμα διακομιστή κατά τον υπολογισμό των matches." });

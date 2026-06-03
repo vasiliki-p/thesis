@@ -3,9 +3,10 @@ const router = express.Router();
 const db = require("../db");
 const authenticateToken = require("../middleware/auth");
 
+// όλα τα routes εδώ θέλουν login
 router.use(authenticateToken);
 
-// 1. Καταγραφή ενέργειας (POST /api/history)
+// καταγραφή ιστορικού (π.χ. όταν βλέπει μια δραστηριότητα)
 router.post("/", async (req, res) => {
   const { activity_id, event } = req.body;
   const user_id = req.user.id; 
@@ -26,7 +27,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// 2. Λήψη ιστορικού χρήστη
+// φέρνουμε το ιστορικό του χρήστη
 router.get("/", async (req, res) => {
   const user_id = req.user.id; 
   try {
@@ -40,8 +41,8 @@ router.get("/", async (req, res) => {
       LIMIT 10
     `;
     
-    const [rows] = await db.query(sql, [user_id]);
-    res.json(rows);
+    const [data] = await db.query(sql, [user_id]);
+    res.json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Σφάλμα βάσης δεδομένων", details: err.message });

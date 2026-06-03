@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const authenticateToken = require("../middleware/auth"); // Το middleware μας
+const authenticateToken = require("../middleware/auth"); 
 
-// ✅ Παίρνει όλες τις αξιολογήσεις (Είναι ανοιχτό για να τις βλέπουν όλοι)
+// παίρνουμε όλες τις κριτικές (για το γενικό feed)
 router.get('/', async (req, res) => {
   try {
     const [results] = await db.query(`
@@ -18,10 +18,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ✅ Παίρνει τις αξιολογήσεις ΜΟΝΟ του συνδεδεμένου χρήστη
+// οι κριτικές του συνδεδεμένου χρήστη
 router.get('/user', authenticateToken, async (req, res) => {
   try {
-    const userId = req.user.id; // Το ID έρχεται από το middleware authenticateToken
+    const userId = req.user.id; // ID από middleware authenticateToken
     const [results] = await db.query(`
       SELECT reviews.*, activities.title AS activity_title, activities.category 
       FROM reviews
@@ -36,7 +36,7 @@ router.get('/user', authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ Παίρνει αξιολογήσεις για μια συγκεκριμένη δραστηριότητα (Ανοιχτό)
+// κριτικές για μια συγκεκριμένη δραστηριότητα
 router.get('/:activity_id', async (req, res) => {
   try {
     const activityId = req.params.activity_id;
@@ -53,10 +53,10 @@ router.get('/:activity_id', async (req, res) => {
   }
 });
 
-// ✅ Προσθήκη νέας αξιολόγησης (ΠΡΟΣΤΑΤΕΥΜΕΝΟ: Μόνο για συνδεδεμένους χρήστες)
+// προσθήκη νέας κριτικής
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    // Το user_id το βγάζουμε από το body! Το παίρνουμε από το req.user.id
+    // Το user_id από το req.user.id
     const { activity_id, rating, comment } = req.body;
     const user_id = req.user.id; 
 

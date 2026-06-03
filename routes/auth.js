@@ -5,7 +5,7 @@ const db = require("../db");
 
 const router = express.Router();
 
-/* Εγγραφή νέου χρήστη  */
+// Εγγραφή νέου χρήστη  
 router.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -39,7 +39,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-/* Σύνδεση χρήστη  */
+// Σύνδεση χρήστη  
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -59,14 +59,15 @@ router.post("/login", async (req, res) => {
 
     const user = users[0];
 
-    // ΒΗΜΑ 4: Καθαρός και αυστηρός έλεγχος ΜΟΝΟ με bcrypt (αφαιρέθηκε το plain-text fallback)
+    //αυστηρός έλεγχος με bcrypt
     const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
       return res.status(400).json({ message: "Μη έγκυρα διαπιστευτήρια" });
     }
 
-    // Δημιουργεί το JWT token με τα στοιχεία του χρήστη και το υπογράφει με το μυστικό κλειδί. Το token λήγει σε 12 ώρες
+    // Δημιουργεί το JWT token με τα στοιχεία του χρήστη και το υπογράφει με το μυστικό κλειδί. 
+    // Το token λήγει σε 12 ώρες
     const token = jwt.sign(    
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
