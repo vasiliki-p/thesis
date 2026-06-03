@@ -60,7 +60,7 @@ export default function SuggestionsPage() {
       setWeatherStatus(finalWeather);
 
       // Προσθήκη του Token στα Headers
-      const res = await axios.post("http://localhost:5000/api/ai/suggest", 
+      const res = await axios.post("/api/ai/suggest", 
         { interests: filters.interests, budget: filters.budget, location: filters.location, weather: finalWeather },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );

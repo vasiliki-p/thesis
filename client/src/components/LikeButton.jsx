@@ -19,7 +19,7 @@ export default function LikeButton({ activityId }) {
       try {
         // 2. Στο URL στέλνουμε ΜΟΝΟ το activity_id. Το token πάει στα headers!
         const res = await axios.get(
-          `http://localhost:5000/api/favourites/check?activity_id=${activityId}`,
+          `/api/favourites/check?activity_id=${activityId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (isMounted) setLiked(res.data.isLiked);
@@ -50,14 +50,14 @@ export default function LikeButton({ activityId }) {
     try {
       if (liked) {
         // 3. Στο DELETE, τα δεδομένα μπαίνουν στο 'data' και το token στο 'headers'
-        await axios.delete(`http://localhost:5000/api/favourites/remove`, {
+        await axios.delete(`/api/favourites/remove`, {
           headers: { Authorization: `Bearer ${token}` },
           data: { activity_id: activityId },
         });
         setLiked(false);
       } else {
         // 4. Στο POST, τα δεδομένα είναι το 2ο όρισμα, τα headers το 3ο
-        await axios.post(`http://localhost:5000/api/favourites/add`, 
+        await axios.post(`/api/favourites/add`, 
           { activity_id: activityId },
           { headers: { Authorization: `Bearer ${token}` } }
         );

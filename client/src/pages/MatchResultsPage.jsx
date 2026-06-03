@@ -15,7 +15,7 @@ export default function MatchResultsPage() {
     const fetchMatches = async () => {
       try {
         // ΕΔΩ ΗΤΑΝ ΤΟ ΛΑΘΟΣ: Τώρα χτυπάμε το '/swipe/results/' για να πάρουμε τα votes!
-        const res = await axios.get(`http://localhost:5000/api/group/swipe/results/${sessionId}`, {
+        const res = await axios.get(`/api/group/swipe/results/${sessionId}`, {
            headers: { Authorization: `Bearer ${token}` }
         });
         

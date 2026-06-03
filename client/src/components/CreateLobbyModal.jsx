@@ -24,7 +24,7 @@ export default function CreateLobbyModal({ show, onClose }) {
 
     try {
       // 2. Στέλνουμε τα στοιχεία ΧΩΡΙΣ το hostId, αλλά ΜΕ το Token στα headers
-      const response = await axios.post('http://localhost:5000/api/group/create', {
+      const response = await axios.post('/api/group/create', {
         isPublic: false, // Είναι private
         lobbyName: newLobby.name,
         lobbyType: newLobby.type,

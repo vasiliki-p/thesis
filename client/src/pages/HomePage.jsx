@@ -29,7 +29,7 @@ export default function HomePage() {
     
     try {
       // 2. Ρωτάμε το backend με το Token στα headers!
-      await axios.get(`http://localhost:5000/api/group/info/${pinInput}`, {
+      await axios.get(`/api/group/info/${pinInput}`, {
           headers: { Authorization: `Bearer ${token}` }
       });
       

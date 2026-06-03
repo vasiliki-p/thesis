@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import axios from 'axios';
 
-const socket = io('http://localhost:5000');
+const socket = io("/");
 
 export default function GroupSwipePage() {
   const { sessionId } = useParams();
@@ -40,7 +40,7 @@ export default function GroupSwipePage() {
       try {
         const token = localStorage.getItem("token");
         // ΔΙΟΡΘΩΣΗ 1: Χτυπάμε το σωστό endpoint που καταλαβαίνει από Φίλτρα!
-        const res = await axios.get(`http://localhost:5000/api/group/activities/${sessionId}`, {
+        const res = await axios.get(`/api/group/activities/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setActivities(res.data);
@@ -115,7 +115,7 @@ export default function GroupSwipePage() {
     }
 
     try {
-      const res = await axios.post('http://localhost:5000/api/group/vote', 
+      const res = await axios.post('/api/group/vote', 
         { 
           sessionId, 
           activityId: Number(currentActivity.id), 

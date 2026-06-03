@@ -4,7 +4,7 @@ import { io } from "socket.io-client";
 import { ArrowLeft, SendFill } from "react-bootstrap-icons";
 import axios from "axios";
 
-const socket = io("http://localhost:5000");
+const socket = io("/");
 
 export default function LobbyRoom() {
   const { id } = useParams();
@@ -26,19 +26,19 @@ export default function LobbyRoom() {
     // Α. Φόρτωση του Τίτλου (Activity ή Lobby)
     if (isNaN(id)) {
         // ΕΔΩ θέλει token γιατί τα group routes είναι πλέον κλειδωμένα!
-        axios.get(`http://localhost:5000/api/group/info/${id}`, {
+        axios.get(`/api/group/info/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         .then(res => setActivity(res.data))
         .catch(() => setActivity({ title: "Δημόσιο Chat Room 💬" }));
     } else {
-        axios.get(`http://localhost:5000/api/activities/${id}`)
+        axios.get(`/api/activities/${id}`)
         .then(res => setActivity(res.data))
         .catch(() => setActivity({ title: "Live Chat Δραστηριότητας" }));
     }
     
     // Β. Φόρτωση των Παλιών Μηνυμάτων (Αυτό έλειπε!)
-    axios.get(`http://localhost:5000/api/lobby/messages/${id}`)
+    axios.get(`/api/lobby/messages/${id}`)
     .then(res => {
         const formattedMessages = res.data.map(msg => ({
             id: msg.id || Date.now() + Math.random(),

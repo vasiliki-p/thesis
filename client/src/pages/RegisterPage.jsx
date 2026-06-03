@@ -19,7 +19,7 @@ export default function RegisterPage() {
 
     try {
       // Κλήση στο πραγματικό σου API για εγγραφή
-      const res = await axios.post("http://localhost:5000/api/register", { 
+      const res = await axios.post("/api/register", { 
         username, 
         email, 
         password 

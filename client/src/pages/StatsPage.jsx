@@ -22,10 +22,10 @@ export default function StatsPage() {
         const token = localStorage.getItem("token"); 
         
         const [reviewsRes, activitiesRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/reviews/user`, {
+          axios.get(`/api/reviews/user`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          axios.get(`http://localhost:5000/api/activities`)
+          axios.get(`/api/activities`)
         ]);
         
         setReviews(reviewsRes.data);

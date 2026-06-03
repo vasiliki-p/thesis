@@ -14,7 +14,7 @@ export default function SurpriseDice() {
 
     try {
       // 1. Τραβάμε ΠΡΑΓΜΑΤΙΚΕΣ δραστηριότητες από το API σου
-      const response = await axios.get('http://localhost:5000/api/activities');
+      const response = await axios.get('/api/activities');
       const activities = response.data;
       
       if (activities && activities.length > 0) {

@@ -64,11 +64,11 @@ export default function UserProfilePage() {
       setLoadingHistory(true);
       try {
         // ΔΙΟΡΘΩΣΗ: Σβήσαμε το ${profile.id} από το τέλος του link!
-        const favRes = await axios.get("http://localhost:5000/api/favourites", {
+        const favRes = await axios.get("/api/favourites", {
             headers: { Authorization: `Bearer ${token}` }
         });
         const favouriteIds = favRes.data.map(Number);
-        const actRes = await axios.get("http://localhost:5000/api/activities");
+        const actRes = await axios.get("/api/activities");
 
         if (favouriteIds.length > 0) {
           setFavourites(actRes.data.filter((act) => favouriteIds.includes(Number(act.id))));
@@ -87,7 +87,7 @@ export default function UserProfilePage() {
     if (!window.confirm("Σίγουρα θες να το διαγράψεις από τα αγαπημένα;")) return;
     try {
       // 3. Στέλνουμε το token στα headers και βγάζουμε το user_id από το body!
-      await axios.delete("http://localhost:5000/api/favourites/remove", { 
+      await axios.delete("/api/favourites/remove", { 
           headers: { Authorization: `Bearer ${token}` },
           data: { activity_id: activityId } 
       });

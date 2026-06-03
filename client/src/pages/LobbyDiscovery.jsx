@@ -21,7 +21,7 @@ export default function LobbyDiscovery() {
       try {
         setLoading(true);
         // 2. Στέλνουμε το Token στα headers για να μας αφήσει ο server να δούμε τα lobbies
-        const response = await axios.get('http://localhost:5000/api/group/active', {
+        const response = await axios.get('/api/group/active', {
             headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
         setLobbies(response.data);
@@ -44,7 +44,7 @@ export default function LobbyDiscovery() {
     e.preventDefault();
     try {
       // 3. Βγάζουμε το hostId (το βρίσκει το backend) και περνάμε το Token στα headers!
-      const res = await axios.post('http://localhost:5000/api/group/create', { 
+      const res = await axios.post('/api/group/create', { 
         isPublic: isPublicMode, 
         lobbyName: newLobby.name || (isPublicMode ? 'Pyxis Group' : 'Private Squad'),
         lobbyType: newLobby.type,

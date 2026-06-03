@@ -17,7 +17,7 @@ export default function ReviewSection({ activityId }) {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5000/api/reviews/${activityId}`);
+        const res = await axios.get(`/api/reviews/${activityId}`);
         setReviews(res.data);
       } catch (err) {
         console.error("Σφάλμα κατά τη φόρτωση κριτικών:", err);
@@ -39,7 +39,7 @@ export default function ReviewSection({ activityId }) {
       const userName = user ? (user.username || "Χρήστης") : "Χρήστης";
 
       // 3. Στέλνουμε ΜΟΝΟ το comment και το activity_id, και το TOKEN στα headers!
-      const response = await axios.post('http://localhost:5000/api/reviews', {
+      const response = await axios.post('/api/reviews', {
         activity_id: activityId,
         comment: newReview, 
         rating: rating

@@ -23,7 +23,7 @@ export default function ActivityDetailsPage() {
     const fetchActivity = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:5000/api/activities/${id}`);
+        const response = await axios.get(`/api/activities/${id}`);
         setActivity(response.data);
         setLoading(false);
 
@@ -52,7 +52,7 @@ export default function ActivityDetailsPage() {
 
     try {
       // Στέλνουμε το token στα headers και βγάζουμε το userId από το body
-      const response = await axios.post('http://localhost:5000/api/lobby/join', 
+      const response = await axios.post('/api/lobby/join', 
         {
           activityId: id,
           userName: user ? (user.username || user.name || "Εξερευνητής") : "Guest"
