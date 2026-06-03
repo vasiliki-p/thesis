@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Heart, HeartFill } from "react-bootstrap-icons";
 import PropTypes from "prop-types";
+import toast from 'react-hot-toast';
 
 export default function LikeButton({ activityId }) {
   const [liked, setLiked] = useState(false);
@@ -40,7 +41,7 @@ export default function LikeButton({ activityId }) {
     e.stopPropagation();
 
     if (!token) {
-      alert("Πρέπει να συνδεθείτε για να κάνετε Like!");
+      toast.error("Πρέπει να συνδεθείτε για να κάνετε Like!");
       return;
     }
 
@@ -65,7 +66,7 @@ export default function LikeButton({ activityId }) {
       }
     } catch (err) {
       console.error("Error toggling like:", err);
-      alert("Σφάλμα σύνδεσης με τον server.");
+      toast.error("Σφάλμα σύνδεσης με τον server.");
     } finally {
       setLoading(false);
     }

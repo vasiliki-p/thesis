@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { StarFill, ChatLeftTextFill, SendFill } from 'react-bootstrap-icons';
+import toast from 'react-hot-toast';
 
 // 1. Αφαιρέσαμε το userId από τα props
 export default function ReviewSection({ activityId }) {
@@ -61,7 +62,7 @@ export default function ReviewSection({ activityId }) {
       setRating(5);
     } catch (err) {
       console.error("Σφάλμα κατά την αποστολή κριτικής:", err);
-      alert("Υπήρξε πρόβλημα με την αποστολή της κριτικής.");
+      toast.error("Υπήρξε πρόβλημα με την αποστολή της κριτικής.");
     }
   };
 

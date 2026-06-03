@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const socket = io("/");
 
@@ -30,7 +31,7 @@ export default function GroupSwipePage() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(sessionId);
-    alert("Ο κωδικός αντιγράφηκε! Στείλτον στην παρέα σου. 📲");
+    toast.success("Ο κωδικός αντιγράφηκε! Στείλτον στην παρέα σου. 📲");
   };
 
   useEffect(() => {
@@ -103,7 +104,7 @@ export default function GroupSwipePage() {
     const token = localStorage.getItem("token");
 
     if (!token) { 
-      alert("Παρακαλώ συνδεθείτε ξανά."); 
+      toast.error("Παρακαλώ συνδεθείτε ξανά."); 
       return; 
     }
 

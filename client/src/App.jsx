@@ -18,6 +18,7 @@ import GroupSwipePage from './components/GroupSwipePage';
 import LobbyRoom from './pages/LobbyRoom';
 import LobbyDiscovery from './pages/LobbyDiscovery';
 import MatchResultsPage from './pages/MatchResultsPage';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const userData = localStorage.getItem('user');
@@ -59,6 +60,22 @@ function App() {
       {/* Το Navbar είναι ΟΡΑΤΟ ΣΕ ΟΛΟΥΣ */}
       <Navbar />
 
+    <Toaster 
+      position="top-center" 
+      toastOptions={{
+        style: {
+          background: 'var(--card-bg)', // Παίρνει το dark mode χρώμα σου
+          color: 'var(--text-main)',
+          border: '1px solid var(--card-border)',
+          borderRadius: '16px',
+          fontWeight: 'bold'
+        },
+        success: { iconTheme: { primary: 'var(--accent-color)', secondary: '#000' } },
+        error: { iconTheme: { primary: '#ff4d4d', secondary: '#fff' } }
+      }} 
+    />
+    
+    {/* Από εδώ και κάτω συνεχίζει ο κώδικάς σου κανονικά... (Navbar, Routes κλπ) */}
        <main style={{ width: '100%' }}>
         <Routes>
           {/* 🔓 ΕΛΕΥΘΕΡΗ ΠΡΟΣΒΑΣΗ (Public Routes) */}

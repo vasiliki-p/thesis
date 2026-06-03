@@ -6,6 +6,7 @@ import {
   Eye, EyeSlash, Pencil, ClockHistory, HeartFill, Trash, BoxArrowUpRight, PersonCircle
 } from "react-bootstrap-icons";
 import { Link } from "react-router-dom";
+import toast from 'react-hot-toast';
 
 function LoadingSpinner({ small = false }) {
   const sizeClass = small ? "spinner-border-sm" : "";
@@ -91,8 +92,9 @@ export default function UserProfilePage() {
           headers: { Authorization: `Bearer ${token}` },
           data: { activity_id: activityId } 
       });
+      toast.success("✅ Η δραστηριότητα αφαιρέθηκε από τα αγαπημένα.");
       setFavourites((prev) => prev.filter((f) => f.id !== activityId));
-    } catch (err) { alert("Κάτι πήγε στραβά με τη διαγραφή."); }
+    } catch (err) { toast.error("❌ Κάτι πήγε στραβά με τη διαγραφή."); }
   };
 
   const enableEdit = (field) => {
@@ -110,13 +112,11 @@ export default function UserProfilePage() {
     setMessage(null);
     try {
       await updateUserProfile(token, profile);
-      setMessage("success");
-      setMessageText("✅ Το προφίλ ενημερώθηκε!");
+      toast.success("✅ Το προφίλ ενημερώθηκε!");
       setProfile((prev) => ({ ...prev, password: "" }));
       setIsEditing({ username: false, email: false });
     } catch (err) {
-      setMessage("error");
-      setMessageText(err?.response?.data?.error || "❌ Σφάλμα κατά την ενημέρωση.");
+      toast.error(err?.response?.data?.error || "❌ Σφάλμα κατά την ενημέρωση.");
     }
   };
 

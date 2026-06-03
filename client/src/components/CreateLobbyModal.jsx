@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { XCircleFill, PlusCircleFill } from 'react-bootstrap-icons';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export default function CreateLobbyModal({ show, onClose }) {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function CreateLobbyModal({ show, onClose }) {
     
     // Έλεγχος ασφαλείας: Αν δεν έχει token, τον στέλνουμε στο login
     if (!token) {
-      alert("Πρέπει να συνδεθείς για να δημιουργήσεις παρέα!");
+      toast.error("Πρέπει να συνδεθείς για να δημιουργήσεις παρέα!");
       navigate('/login');
       return;
     }
@@ -41,7 +42,7 @@ export default function CreateLobbyModal({ show, onClose }) {
 
     } catch (error) {
       console.error("Σφάλμα κατά την αποθήκευση του Lobby:", error);
-      alert("Υπήρξε πρόβλημα με τη δημιουργία του δωματίου. Δοκιμάστε ξανά.");
+      toast.error("Υπήρξε πρόβλημα με τη δημιουργία του δωματίου. Δοκιμάστε ξανά.");
     }
   };
 

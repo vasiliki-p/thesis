@@ -6,6 +6,7 @@ import { addToHistory } from "../api";
 import Map from "../components/Map"; 
 import ReviewSection from "../components/ReviewSection"; 
 import LikeButton from "../components/LikeButton"; 
+import toast from 'react-hot-toast';
 
 export default function ActivityDetailsPage() {
   const { id } = useParams();
@@ -45,7 +46,7 @@ export default function ActivityDetailsPage() {
     const user = storedUser ? JSON.parse(storedUser) : null;
     
     if (!token) {
-      alert("Πρέπει να συνδεθείς για να μπεις στο Live Chat!");
+      toast.error("Πρέπει να συνδεθείς για να μπεις στο Live Chat!");
       navigate('/login');
       return;
     }

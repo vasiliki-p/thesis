@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { XCircleFill, Radar, PlusCircleFill, GeoAltFill, LockFill, Globe } from 'react-bootstrap-icons';
+import toast from 'react-hot-toast';
 
 export default function LobbyDiscovery() {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ export default function LobbyDiscovery() {
   }, [token]);
 
   const openCreateModal = (publicMode) => {
-    if (!token) { alert("Πρέπει να συνδεθείς πρώτα!"); navigate('/login'); return; }
+    if (!token) { toast.error("Πρέπει να συνδεθείς πρώτα!"); navigate('/login'); return; }
     setIsPublicMode(publicMode);
     setShowModal(true);
   };
@@ -59,13 +60,13 @@ export default function LobbyDiscovery() {
       }
     } catch (err) {
       console.error("Lobby create error:", err);
-      alert("Σφάλμα κατά τη δημιουργία δωματίου");
+      toast.error("Σφάλμα κατά τη δημιουργία δωματίου");
     }
   };
 
   const handleJoinLobby = (lobbyId) => {
     if (!token) {
-      alert("Πρέπει να συνδεθείς ή να κάνεις εγγραφή για να μπεις στην παρέα! 🚀");
+      toast.error("Πρέπει να συνδεθείς ή να κάνεις εγγραφή για να μπεις στην παρέα! 🚀");
       navigate('/login');
       return; 
     }

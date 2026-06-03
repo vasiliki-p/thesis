@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PersonalChoice from '../components/PersonalChoice'; 
 import SurpriseDice from '../components/SurpriseDice'; 
 import CreateLobbyModal from '../components/CreateLobbyModal'; 
-import axios from 'axios';
+import axios from 'axios';import toast from 'react-hot-toast';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -17,13 +17,13 @@ export default function HomePage() {
   const handleJoinLobby = async (destination) => {
     // 1. Έλεγχος Ασφαλείας: Πρέπει να είναι συνδεδεμένος!
     if (!token) {
-      alert('Πρέπει να συνδεθείτε για να μπείτε σε μια παρέα!');
+      toast.error('Πρέπει να συνδεθείτε για να μπείτε σε μια παρέα!');
       navigate('/login');
       return;
     }
 
     if (pinInput.length < 3) {
-      alert('Παρακαλώ εισάγετε έγκυρο PIN!');
+      toast.error('Παρακαλώ εισάγετε έγκυρο PIN!');
       return;
     }
     
@@ -41,7 +41,7 @@ export default function HomePage() {
       }
     } catch (error) {
       // Αν το backend γυρίσει 404 (Δεν βρέθηκε) ή 401
-      alert('❌ Το δωμάτιο δεν βρέθηκε! Ελέγξτε το PIN σας.');
+      toast.error('❌ Το δωμάτιο δεν βρέθηκε! Ελέγξτε το PIN σας.');
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export default function SurpriseDice() {
   const [isRolling, setIsRolling] = useState(false);
@@ -30,12 +31,12 @@ export default function SurpriseDice() {
 
       } else {
         setIsRolling(false);
-        alert("Δεν βρέθηκαν δραστηριότητες για να διαλέξουμε.");
+        toast.error("Δεν βρέθηκαν δραστηριότητες για να διαλέξουμε.");
       }
     } catch (err) { 
       console.error("Σφάλμα στο ζάρι:", err);
       setIsRolling(false);
-      alert("Υπήρξε πρόβλημα με τη σύνδεση στον server.");
+      toast.error("Υπήρξε πρόβλημα με τη σύνδεση στον server.");
     }
   };
 
