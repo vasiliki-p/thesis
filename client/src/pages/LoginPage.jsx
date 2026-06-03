@@ -11,23 +11,23 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const Login = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // Κλήση στο πραγματικό σου API
+      // κλήση στο πραγματικό σου API
       const res = await axios.post("/api/login", { email, password });
       
-      // Αποθήκευση του token και των στοιχείων χρήστη
+      // αποθήκευση του token και των στοιχείων χρήστη
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user_id", res.data.user.id);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       
-      // Ανακατεύθυνση στην Αρχική
+      // ανακατεύθυνση στην Αρχική
       navigate("/");
-      // Κάνουμε ένα μικρό reload για να ενημερωθεί το Navbar (ανρειάζεται)
+      // reload για να ενημερωθεί το Navbar (αν χρειάζεται)
       window.location.reload(); 
     } catch (err) {
       setError(err.response?.data?.message || "Λάθος email ή κωδικός. Προσπάθησε ξανά.");
@@ -40,11 +40,11 @@ export default function LoginPage() {
 
 <div className="d-flex align-items-center justify-content-center position-relative w-100" style={{ minHeight: "calc(100vh - 80px)", paddingBottom: "5vh", background: "var(--bg-color)" }}>
         
-      {/* Διακοσμητικά background blobs */}
+      {/* διακοσμητικά σχήματα στο background */}
       <div className="position-absolute" style={{ width: '300px', height: '300px', background: 'var(--accent-color)', borderRadius: '50%', filter: 'blur(100px)', opacity: '0.2', top: '10%', left: '10%', zIndex: 0 }}></div>
       <div className="position-absolute" style={{ width: '400px', height: '400px', background: '#8A2BE2', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.15', bottom: '10%', right: '10%', zIndex: 0 }}></div>
 
-      {/* Η Κάρτα του Login */}
+      {/* Η κάρτα του login */}
       <div className="bento-card p-4 p-md-5 position-relative z-1 shadow-lg" style={{ width: "100%", maxWidth: "420px", background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: "32px", backdropFilter: "blur(20px)" }}>
         <div className="text-center mb-4">
   <div className="mb-3">
@@ -60,8 +60,8 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin}>
-          {/* Email Input */}
+        <form onSubmit={Login}>
+          {/* πεδίο email */}
           <div className="mb-3">
             <label className="form-label small fw-bold" style={{ color: "var(--text-muted)", marginLeft: "5px" }}>EMAIL</label>
             <div className="input-group premium-input-group shadow-sm" style={{ borderRadius: "16px", overflow: "hidden", border: "1px solid var(--card-border)" }}>
@@ -80,7 +80,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Password Input */}
+          {/* πεδίο κωδικού */}
           <div className="mb-4">
             <label className="form-label small fw-bold" style={{ color: "var(--text-muted)", marginLeft: "5px" }}>ΚΩΔΙΚΟΣ</label>
             <div className="input-group premium-input-group shadow-sm" style={{ borderRadius: "16px", overflow: "hidden", border: "1px solid var(--card-border)" }}>

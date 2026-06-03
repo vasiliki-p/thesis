@@ -11,22 +11,22 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleRegister = async (e) => {
+  
+  // η συνάρτηση για την εγγραφή
+  const Register = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // Κλήση στο πραγματικό σου API για εγγραφή
+      // κλήση στο πραγματικό σου API για εγγραφή
       const res = await axios.post("/api/register", { 
         username, 
         email, 
         password 
       });
       
-      // Αποθήκευση του token και των στοιχείων χρήστη (αν το API σου κάνει και login κατευθείαν)
-      // Αν όχι, απλά κάνε redirect στο '/login'
+      // αν το api γυρίσει token, συνδεόμαστε αυτόματα
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
         localStorage.setItem("user_id", res.data.user.id);
@@ -34,7 +34,7 @@ export default function RegisterPage() {
         navigate("/");
         window.location.reload();
       } else {
-        // Αν το API επιστρέφει απλά "Success", στείλε τον στο Login
+      // αλλιώς απλά κάνε redirect στο login
         navigate("/login");
       }
 
@@ -47,11 +47,11 @@ export default function RegisterPage() {
 
   return (
   <div className="d-flex align-items-center justify-content-center position-relative w-100" style={{ minHeight: "calc(100vh - 90px)" }}>
-      {/* Διακοσμητικά background blobs */}
+      {/* background σχήματα */}
       <div className="position-absolute" style={{ width: '300px', height: '300px', background: 'var(--accent-color)', borderRadius: '50%', filter: 'blur(100px)', opacity: '0.2', top: '10%', right: '10%', zIndex: 0 }}></div>
       <div className="position-absolute" style={{ width: '400px', height: '400px', background: '#8A2BE2', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.15', bottom: '10%', left: '10%', zIndex: 0 }}></div>
 
-      {/* Η Κάρτα του Register */}
+      {/* Η κάρτα του Register */}
       <div className="bento-card p-4 p-md-5 position-relative z-1 shadow-lg" style={{ width: "100%", maxWidth: "420px", background: "var(--card-bg)", border: "1px solid var(--card-border)", borderRadius: "32px", backdropFilter: "blur(20px)" }}>
         <div className="text-center mb-4">
   <div className="mb-3">
@@ -66,9 +66,9 @@ export default function RegisterPage() {
           </div>
         )}
 
-        <form onSubmit={handleRegister}>
+        <form onSubmit={Register}>
           
-          {/* Username Input */}
+          {/* username */}
           <div className="mb-3">
             <label className="form-label small fw-bold" style={{ color: "var(--text-muted)", marginLeft: "5px" }}>ΟΝΟΜΑ ΧΡΗΣΤΗ</label>
             <div className="input-group premium-input-group shadow-sm" style={{ borderRadius: "16px", overflow: "hidden", border: "1px solid var(--card-border)" }}>
@@ -87,7 +87,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Email Input */}
+          {/* email */}
           <div className="mb-3">
             <label className="form-label small fw-bold" style={{ color: "var(--text-muted)", marginLeft: "5px" }}>EMAIL</label>
             <div className="input-group premium-input-group shadow-sm" style={{ borderRadius: "16px", overflow: "hidden", border: "1px solid var(--card-border)" }}>
@@ -106,7 +106,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Password Input */}
+          {/* password */}
           <div className="mb-4">
             <label className="form-label small fw-bold" style={{ color: "var(--text-muted)", marginLeft: "5px" }}>ΚΩΔΙΚΟΣ</label>
             <div className="input-group premium-input-group shadow-sm" style={{ borderRadius: "16px", overflow: "hidden", border: "1px solid var(--card-border)" }}>
