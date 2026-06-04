@@ -8,11 +8,11 @@ export default function ActivitiesPage() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  const [selectedCategory, setSelectedCategory] = useState('Όλα');
-
+  const [category, setCategory] = useState('Όλα');
+ 
+  // φορτώνουμε τα δεδομένα στην αρχή
   useEffect(() => {
-    const loadActivities = async () => {
+    const loadActs = async () => {
       try {
         const data = await getActivities();
         setActivities(data);
@@ -23,14 +23,16 @@ export default function ActivitiesPage() {
         setLoading(false);
       }
     };
-    loadActivities();
+    loadActs();
   }, []);
 
-  const categories = ['Όλα', ...new Set(activities.map(act => act.category || 'Άλλο'))];
-
-  const filteredActivities = selectedCategory === 'Όλα' 
+  // μαζεύουμε τις μοναδικές κατηγορίες για τα κουμπιά
+  const allCategories = ['Όλα', ...new Set(activities.map(act => act.category || 'Άλλο'))];
+  
+  // κόβουμε τη λίστα ανάλογα με το τι πάτησε ο χρήστης
+  const filteredActs = category === 'Όλα' 
     ? activities 
-    : activities.filter(act => (act.category || 'Άλλο') === selectedCategory);
+    : activities.filter(act => (act.category || 'Άλλο') === category);
 
   if (loading) return (
     <div className="d-flex justify-content-center align-items-center vh-100" style={{ background: 'var(--bg-color)' }}>
@@ -52,10 +54,10 @@ export default function ActivitiesPage() {
   return (
     <div className="container position-relative mt-5" style={{ minHeight: '100vh', zIndex: 1 }}>
       
-      {/* Background blobs */}
+      {/* background εφέ */}
       <div className="position-absolute" style={{ width: '400px', height: '400px', background: 'var(--accent-color)', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.1', top: '0', left: '10%', zIndex: -1 }}></div>
 
-      {/* 🖋️ HEADER (Premium Typography) */}
+      {/* header */}
       <div className="text-center mb-5">
         <span className="badge rounded-pill px-3 py-2 mb-3 shadow-sm fw-bold text-uppercase d-inline-flex align-items-center gap-2" 
               style={{ background: 'var(--card-bg)', color: 'var(--text-main)', border: '1px solid var(--card-border)', letterSpacing: "1px", fontSize: "0.75rem" }}>
@@ -69,19 +71,18 @@ export default function ActivitiesPage() {
         </p>
       </div>
 
-      {/* 🧊 MAP BENTO CARD - Διορθωμένο: Αφαίρεση padding p-2 */}
+      {/* χάρτης */}
       <div className="bento-card mb-5 shadow-lg" 
            style={{ 
              background: 'var(--card-bg)', 
              border: '1px solid var(--card-border)', 
              borderRadius: '32px', 
              height: '450px',
-             overflow: 'hidden' // ✅ Εξασφαλίζει ότι ο χάρτης "κόβεται" σωστά στις γωνίες της κάρτας
+             overflow: 'hidden' 
            }}>
-        {filteredActivities.length > 0 ? (
-            /* Διορθωμένο: Αφαίρεση του padding στο εσωτερικό div */
+        {filteredActs.length > 0 ? (
             <div style={{ overflow: 'hidden', height: '100%' }}>
-              <Map activities={filteredActivities} />
+              <Map activities={filteredActs} />
             </div>
         ) : (
             <div className="d-flex justify-content-center align-items-center h-100 fw-bold p-3" style={{ color: 'var(--text-muted)' }}>
@@ -90,16 +91,16 @@ export default function ActivitiesPage() {
         )}
       </div>
 
-      {/* 🔘 MOOD FILTERS */}
+      {/* φίλτρα κατηγοριών */}
       <div className="text-center mb-5">
         <div className="d-flex flex-wrap gap-2 justify-content-center">
-            {categories.map(cat => {
-              const isActive = selectedCategory === cat;
+            {allCategories.map(cat => {
+              const isActive = category === cat;
               return (
                 <button 
                     key={cat}
                     className="badge transition-btn fw-bold shadow-sm" 
-                    onClick={() => setSelectedCategory(cat)}
+                    onClick={() => setCategory(cat)}
                     style={{ 
                       background: isActive ? 'var(--text-main)' : 'var(--card-bg)', 
                       color: isActive ? 'var(--bg-color)' : 'var(--text-main)',
@@ -117,18 +118,18 @@ export default function ActivitiesPage() {
         </div>
       </div>
 
-      {/* 🖋️ SECTION TITLE */}
+      {/* τίτλος λίστας */}
       <div className="mb-4 px-2 d-flex align-items-center gap-2">
          <GeoAltFill size={24} style={{ color: 'var(--accent-color)' }} />
          <h3 className="fw-bold mb-0" style={{ color: 'var(--text-main)', letterSpacing: '-0.5px' }}>
-            {selectedCategory === 'Όλα' ? 'Όλες οι εμπειρίες' : selectedCategory}
+            {category === 'Όλα' ? 'Όλες οι εμπειρίες' : category}
          </h3>
       </div>
       
-      {/* 🧊 LISTA (Bento Grid) */}
+      {/* λίστα με κάρτες */}
       <div className="row g-4 mb-5">
-        {filteredActivities.length > 0 ? (
-            filteredActivities.map(activity => (
+        {filteredActs.length > 0 ? (
+            filteredActs.map(activity => (
             <div className="col-md-6 col-lg-4" key={activity.id}>
                 {/* 💡 Σημείωση: Βεβαιώσου ότι το ActivityCard.jsx ακούει και αυτό στα χρώματα του Theme! */}
                 <ActivityCard activity={activity} />
@@ -140,7 +141,7 @@ export default function ActivitiesPage() {
                 <button 
                   className="btn rounded-pill px-4 py-2 fw-bold transition-btn" 
                   style={{ background: 'var(--text-main)', color: 'var(--bg-color)' }}
-                  onClick={() => setSelectedCategory('Όλα')}
+                  onClick={() => setCategory('Όλα')}
                 >
                   Επιστροφή σε όλες
                 </button>

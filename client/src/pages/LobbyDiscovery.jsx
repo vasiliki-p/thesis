@@ -14,14 +14,13 @@ export default function LobbyDiscovery() {
   const [newLobby, setNewLobby] = useState({ name: '', type: 'Διασκέδαση', location: '' });
 
   const userId = localStorage.getItem("user_id");
-  // 1. Παίρνουμε το Token
   const token = localStorage.getItem("token");
-
+  
+  // φορτώνουμε τα ενεργά lobbies
   useEffect(() => {
-    const fetchLobbies = async () => {
+    const loadLobbies = async () => {
       try {
         setLoading(true);
-        // 2. Στέλνουμε το Token στα headers για να μας αφήσει ο server να δούμε τα lobbies
         const response = await axios.get('/api/group/active', {
             headers: token ? { Authorization: `Bearer ${token}` } : {}
         });
@@ -32,19 +31,19 @@ export default function LobbyDiscovery() {
         setLoading(false);
       }
     };
-    fetchLobbies();
+    loadLobbies();
   }, [token]);
 
-  const openCreateModal = (publicMode) => {
+  // άνοιγμα του modal δημιουργίας
+  const openModal = (publicMode) => {
     if (!token) { toast.error("Πρέπει να συνδεθείς πρώτα!"); navigate('/login'); return; }
     setIsPublicMode(publicMode);
     setShowModal(true);
   };
 
-  const handleCreateLobby = async (e) => {
+  const createLobby = async (e) => {
     e.preventDefault();
     try {
-      // 3. Βγάζουμε το hostId (το βρίσκει το backend) και περνάμε το Token στα headers!
       const res = await axios.post('/api/group/create', { 
         isPublic: isPublicMode, 
         lobbyName: newLobby.name || (isPublicMode ? 'Pyxis Group' : 'Private Squad'),
@@ -64,7 +63,8 @@ export default function LobbyDiscovery() {
     }
   };
 
-  const handleJoinLobby = (lobbyId) => {
+  // είσοδος σε lobby
+  const joinLobby = (lobbyId) => {
     if (!token) {
       toast.error("Πρέπει να συνδεθείς ή να κάνεις εγγραφή για να μπεις στην παρέα! 🚀");
       navigate('/login');
@@ -76,7 +76,7 @@ export default function LobbyDiscovery() {
   return (
     <div className="container position-relative" style={{ paddingTop: '30px', paddingBottom: '80px', minHeight: '100vh', zIndex: 1 }}>
       
-      {/* --- HEADER & LIVE RADAR ANIMATION --- */}
+      {/* header και εφέ ραντάρ */}
       <div className="text-center mb-5">
         <div className="radar-base mb-4 mx-auto position-relative d-flex align-items-center justify-content-center"
              style={{ width: '100px', height: '100px', background: 'rgba(217, 119, 6, 0.1)', border: '2px solid rgba(217, 119, 6, 0.2)', borderRadius: '50%' }}>
@@ -93,7 +93,7 @@ export default function LobbyDiscovery() {
         </p>
       </div>
 
-      {/* --- LOBBIES GRID (Μόνο για το Radar) --- */}
+      {/* λίστα με τα ανοιχτά lobbies */}
       {loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-warning" role="status"></div>
@@ -123,7 +123,7 @@ export default function LobbyDiscovery() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <button onClick={() => handleJoinLobby(lobby.pin || lobby.id)} className="btn w-100 fw-bold py-3 transition-btn rounded-pill" style={{ background: '#d97706', color: '#fff' }}>
+                  <button onClick={() => joinLobby(lobby.pin || lobby.id)} className="btn w-100 fw-bold py-3 transition-btn rounded-pill" style={{ background: '#d97706', color: '#fff' }}>
                     Join Lobby 🚀
                   </button>
                 </div>
@@ -138,10 +138,9 @@ export default function LobbyDiscovery() {
         </div>
       )}
 
-      {/* --- ΔΙΑΧΩΡΙΣΜΟΣ ΔΗΜΙΟΥΡΓΙΑΣ PUBLIC vs PRIVATE --- */}
+      {/* επιλογές για νέο public ή private lobby */}
       <div className="row g-4 mx-auto" style={{ maxWidth: '900px' }}>
-        
-        {/* PUBLIC LOBBY BOX */}
+     
         <div className="col-md-6">
           <div className="p-4 p-lg-5 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center transition-btn" 
                style={{ background: 'var(--card-bg)', border: '2px dashed #d97706' }}>
@@ -152,13 +151,12 @@ export default function LobbyDiscovery() {
             <p className="small mb-4" style={{ color: 'var(--text-muted)' }}>
               Άνοιξε ένα Public Lobby για να φανεί στο Ραντάρ και να μπουν άτομα από όλη την πόλη.
             </p>
-            <button className="btn w-100 py-3 rounded-pill fw-bold mt-auto" onClick={() => openCreateModal(true)} style={{ background: '#d97706', color: '#fff' }}>
+            <button className="btn w-100 py-3 rounded-pill fw-bold mt-auto" onClick={() => openModal(true)} style={{ background: '#d97706', color: '#fff' }}>
               <Radar className="me-2" /> Ανοιχτό Lobby
             </button>
           </div>
         </div>
 
-        {/* PRIVATE SQUAD BOX */}
         <div className="col-md-6">
           <div className="p-4 p-lg-5 rounded-4 shadow-sm text-center h-100 d-flex flex-column justify-content-center transition-btn" 
                style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
@@ -169,14 +167,14 @@ export default function LobbyDiscovery() {
             <p className="small mb-4" style={{ color: 'var(--text-muted)' }}>
               Φτιάξε ένα κλειστό Private Room, πάρε το μυστικό PIN και στείλτο μόνο στους φίλους σου.
             </p>
-            <button className="btn w-100 py-3 rounded-pill fw-bold mt-auto" onClick={() => openCreateModal(false)} style={{ background: 'var(--text-main)', color: 'var(--bg-color)' }}>
+            <button className="btn w-100 py-3 rounded-pill fw-bold mt-auto" onClick={() => openModal(false)} style={{ background: 'var(--text-main)', color: 'var(--bg-color)' }}>
               <LockFill className="me-2" /> Private Squad
             </button>
           </div>
         </div>
       </div>
 
-      {/* --- MODAL ΔΗΜΙΟΥΡΓΙΑΣ LOBBY --- */}
+      {/* modal δημιουργίας */}
       {showModal && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center px-3" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 9999 }}>
           <div className="p-4 p-md-5 w-100 position-relative shadow-lg" style={{ maxWidth: '440px', background: 'var(--card-bg)', border: `2px solid ${isPublicMode ? '#d97706' : 'var(--accent-color)'}`, borderRadius: '32px' }}>
@@ -190,7 +188,7 @@ export default function LobbyDiscovery() {
               {isPublicMode ? 'Το δωμάτιο θα εμφανιστεί στο κεντρικό ραντάρ.' : 'Μόνο όσοι έχουν το PIN θα μπορούν να μπουν.'}
             </p>
             
-            <form onSubmit={handleCreateLobby}>
+            <form onSubmit={createLobby}>
               <div className="mb-3">
                 <label className="form-label small fw-bold mb-2" style={{ color: 'var(--text-muted)' }}>ΟΝΟΜΑ ΠΑΡΕΑΣ</label>
                 <input type="text" className="form-control border-0" placeholder={isPublicMode ? "π.χ. Nightout στο Κέντρο 🍻" : "π.χ. Κολλητοί 🍕"} value={newLobby.name} onChange={(e) => setNewLobby({...newLobby, name: e.target.value})} style={{ background: 'var(--bg-color)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '12px', boxShadow: 'none' }} />

@@ -3,41 +3,42 @@ import { Link, useNavigate } from 'react-router-dom';
 import PersonalChoice from '../components/PersonalChoice'; 
 import SurpriseDice from '../components/SurpriseDice'; 
 import CreateLobbyModal from '../components/CreateLobbyModal'; 
-import axios from 'axios';import toast from 'react-hot-toast';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 
 export default function HomePage() {
   const navigate = useNavigate();
   
-  // Παίρνουμε το Token από το localStorage
+  // παίρνουμε το token από το localStorage
   const token = localStorage.getItem('token'); 
 
   const [showModal, setShowModal] = useState(false);
-  const [pinInput, setPinInput] = useState('');
+  const [pin, setPin] = useState('');
 
-  const handleJoinLobby = async (destination) => {
-    // 1. Έλεγχος Ασφαλείας: Πρέπει να είναι συνδεδεμένος!
+  // είσοδος σε υπάρχον δωμάτιο
+  const JoinLobby = async (mode) => {
     if (!token) {
       toast.error('Πρέπει να συνδεθείτε για να μπείτε σε μια παρέα!');
       navigate('/login');
       return;
     }
 
-    if (pinInput.length < 3) {
+    if (pin.length < 3) {
       toast.error('Παρακαλώ εισάγετε έγκυρο PIN!');
       return;
     }
     
     try {
-      // 2. Ρωτάμε το backend με το Token στα headers!
-      await axios.get(`/api/group/info/${pinInput}`, {
+      // τσεκάρουμε αν υπάρχει το δωμάτιο
+      await axios.get(`/api/group/info/${pin}`, {
           headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Αν δεν βγάλει error, το δωμάτιο βρέθηκε! Προχωράμε:
-      if (destination === 'chat') {
-        navigate(`/lobby/${pinInput}`);
+      // αν το βρήκε, πάμε εκεί που διάλεξε (chat ή swipe)
+      if (mode === 'chat') {
+        navigate(`/lobby/${pin}`);
       } else {
-        navigate(`/group-swipe/${pinInput}`);
+        navigate(`/group-swipe/${pin}`);
       }
     } catch (error) {
       // Αν το backend γυρίσει 404 (Δεν βρέθηκε) ή 401
@@ -48,7 +49,7 @@ export default function HomePage() {
   return (
     <div className="position-relative" style={{ minHeight: '100vh', paddingBottom: '100px' }}>      
       
-      {/* --- HERO SECTION --- */}
+      {/* hero section */}
       <section className="d-flex flex-column justify-content-center align-items-center text-center px-3" style={{ minHeight: '80vh' }}>
         <div className="container">
           <span className="badge rounded-pill px-4 py-2 mb-4 shadow-sm fw-bold" style={{ background: 'var(--text-main)', color: 'var(--inverted-text)', letterSpacing: '1px' }}>
@@ -75,11 +76,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- BENTO GRID CONTENT --- */}
+      {/* περιεχόμενο bento grid */}
       <main className="container z-1 position-relative">
         <div className="row g-4">
           
-          {/* ΚΑΡΤΑ 1: PERSONAL FEED (Για σένα) */}
+          {/* προσωπικό feed */}
           <div className="col-12">
             <div className="bento-card p-4 p-md-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', backdropFilter: 'blur(24px)' }}>
                 <div className="d-flex align-items-center mb-4 gap-3">
@@ -92,7 +93,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* ΚΑΡΤΑ 2: LIVE LOBBIES PROMO */}
+          {/* lobbies promo */}
           <div className="col-12">
             <div className="bento-card p-4 p-md-5 d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', backdropFilter: 'blur(24px)' }}>
               <div>
@@ -122,7 +123,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* ΚΑΡΤΑ 3: GROUP MODE (Με το νέο σύστημα εισόδου) */}
+          {/* group mode */}
           <div className="col-lg-8">
             <div className="bento-card p-4 p-md-5 h-100 text-dark d-flex flex-column" style={{ background: 'var(--accent-color)', border: 'none' }}>
                 <h2 className="display-6 fw-bold mb-3" style={{ letterSpacing: '-1px' }}>Group Mode 👥</h2>
@@ -130,9 +131,7 @@ export default function HomePage() {
                 <div className="p-3 p-md-4 rounded-4 shadow mt-auto flex-grow-1" style={{ background: 'var(--inverted-text)', color: 'var(--text-main)' }}>
                     
                     <div className="card p-4 shadow-sm" style={{ borderRadius: '15px', maxWidth: '400px', margin: '20px auto' }}>
-                     <h3 className="text-center mb-4">👥 Group Mode</h3>
                       
-                      {/* Κουμπί Δημιουργίας (Διορθωμένα χρώματα) */}
                       <button 
                         onClick={() => setShowModal(true)} 
                         className="btn w-100 mb-3 py-2 fw-bold"
@@ -143,20 +142,20 @@ export default function HomePage() {
 
                       <div className="hr-text text-muted my-2 text-center">ή μπες σε υπάρχουσα</div>
 
-                      {/* Πεδίο PIN & Δύο Κουμπιά */}
+                      {/* πεδίο PIN  κ κουμπιά */}
                       <div className="mb-3 mt-3">
                         <input 
                           type="text" 
                           className="form-control text-center mb-3" 
                           placeholder="Κωδικός PIN" 
                           maxLength="6"
-                          value={pinInput}
-                          onChange={(e) => setPinInput(e.target.value.toUpperCase())}
+                          value={pin}
+                          onChange={(e) => setPin(e.target.value.toUpperCase())}
                           style={{ letterSpacing: '2px', fontWeight: 'bold', fontSize: '1.1rem' }}
                         />
                         <div className="d-flex gap-2">
                           <button 
-                            onClick={() => handleJoinLobby('chat')} 
+                            onClick={() => JoinLobby('chat')} 
                             className="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2 fw-bold"
                             style={{ background: '#ffffff', color: 'var(--text-main)', border: '1px solid var(--text-main)' }}
                           >
@@ -164,7 +163,7 @@ export default function HomePage() {
                           </button>
                           
                           <button 
-                            onClick={() => handleJoinLobby('swipe')} 
+                            onClick={() => JoinLobby('swipe')} 
                             className="btn w-50 d-flex align-items-center justify-content-center gap-2 fw-bold"
                             style={{ background: 'var(--text-main)', color: '#ffffff', border: 'none' }}
                           >
@@ -178,7 +177,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* ΚΑΡΤΑ 4: SMART ANALYTICS */}
+          {/* smart analytics */}
           <div className="col-lg-4">
             <div className="bento-card p-4 p-md-5 h-100 d-flex flex-column align-items-center justify-content-center text-center" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', backdropFilter: 'blur(24px)' }}>
                 <div className="display-3 mb-4" style={{ filter: 'drop-shadow(0px 10px 10px rgba(0,0,0,0.1))' }}>⚡</div>
@@ -190,7 +189,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* --- STYLES --- */}
+      {/* styles */}
       <style>{`
         .pulse-dot { width: 14px; height: 14px; background: var(--accent-color); border-radius: 50%; box-shadow: 0 0 0 0 var(--shadow-color); animation: pulse-dot-anim 2s infinite; }
         @keyframes pulse-dot-anim { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 var(--shadow-color); } 70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0,0,0,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0,0,0,0); } }

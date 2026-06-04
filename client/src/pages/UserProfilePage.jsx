@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
-import { getUserProfile, updateUserProfile, getUserHistory } from "../api";
+import { getProfile, updateProfile, getHistory } from "../api";
 import {
   Eye, EyeSlash, Pencil, ClockHistory, HeartFill, Trash, BoxArrowUpRight, PersonCircle
 } from "react-bootstrap-icons";
@@ -32,12 +32,12 @@ export default function UserProfilePage() {
   const emailRef = useRef(null);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState(null);
-  const [messageText, setMessageText] = useState("");
 
   const token = localStorage.getItem("token");
   const formatCost = (cost) => (Number(cost) === 0 ? "Free" : `${cost}€`);
 
+
+  // fallback εικόνες ανάλογα με λέξεις-κλειδιά
   const getImage = (act) => {
     if (act.image_url && act.image_url.length > 10) return act.image_url;
     const title = act.title ? act.title.toLowerCase() : "";
@@ -47,24 +47,25 @@ export default function UserProfilePage() {
     return "https://picsum.photos/100";
   };
 
+  // φόρτωση βασικών στοιχείων προφίλ
   useEffect(() => {
-    const fetchProfile = async () => {
+    const loadProfile = async () => {
       try {
-        const data = await getUserProfile(token);
+        const data = await getProfile(token);
         setProfile((prev) => ({ ...prev, ...data, password: "" }));
       } catch (err) { console.error("Error fetching profile:", err); } 
       finally { setLoading(false); }
     };
-    if (token) fetchProfile();
+    if (token) loadProfile();
   }, [token]);
 
+  // φόρτωση αγαπημένων και ιστορικού
   useEffect(() => {
     if (!profile.id) return;
-    const fetchData = async () => {
+    const loadData = async () => {
       setLoadingFavourites(true);
       setLoadingHistory(true);
       try {
-        // ΔΙΟΡΘΩΣΗ: Σβήσαμε το ${profile.id} από το τέλος του link!
         const favRes = await axios.get("/api/favourites", {
             headers: { Authorization: `Bearer ${token}` }
         });
@@ -75,17 +76,16 @@ export default function UserProfilePage() {
           setFavourites(actRes.data.filter((act) => favouriteIds.includes(Number(act.id))));
         } else { setFavourites([]); }
 
-        // Το getUserHistory() στο api.js διαβάζει ήδη το token, οπότε δεν θέλει παραμέτρους
-        const historyData = await getUserHistory();
+        const historyData = await getHistory();
         setHistory(historyData);
       } catch (err) { console.error("Error loading data:", err); } 
       finally { setLoadingFavourites(false); setLoadingHistory(false); }
     };
-    fetchData();
+    loadData();
   }, [profile.id, token]);
 
+  // custom toast για επιβεβαίωση διαγραφής
 const handleRemoveFav = (activityId) => {
-    // Φτιάχνουμε ένα custom toast με HTML (κουμπιά) μέσα του!
     toast((t) => (
       <div className="d-flex flex-column align-items-center gap-2 p-2">
         <span className="fw-bold text-center" style={{ color: "var(--text-main)" }}>
@@ -95,9 +95,9 @@ const handleRemoveFav = (activityId) => {
           <button
             className="btn btn-sm btn-danger rounded-pill px-3 fw-bold"
             onClick={async () => {
-              toast.dismiss(t.id); // 1. Κλείνει το toast ερώτησης
+              toast.dismiss(t.id); // κλείνει το toast ερώτησης
               
-              // 2. Κάνει τη διαγραφή στο Backend
+              //κάνει τη διαγραφή στο Backend
               try {
                 await axios.delete("/api/favourites/remove", { 
                     headers: { Authorization: `Bearer ${token}` },
@@ -115,7 +115,7 @@ const handleRemoveFav = (activityId) => {
           
           <button
             className="btn btn-sm btn-secondary rounded-pill px-3 fw-bold"
-            onClick={() => toast.dismiss(t.id)} // Απλά κλείνει το toast ερώτησης
+            onClick={() => toast.dismiss(t.id)} // απλά κλείνει το toast ερώτησης
           >
             Ακύρωση
           </button>
@@ -124,6 +124,7 @@ const handleRemoveFav = (activityId) => {
     ), { duration: 6000 }); // Το αφήνουμε 6 δευτερόλεπτα ανοιχτό για να προλάβει να πατήσει
   };
 
+  // ξεκλείδωμα πεδίου και auto-focus
   const enableEdit = (field) => {
     setIsEditing((prev) => ({ ...prev, [field]: true }));
     setTimeout(() => {
@@ -132,13 +133,13 @@ const handleRemoveFav = (activityId) => {
     }, 100);
   };
 
-  const handleChange = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
+  const change = (e) => setProfile({ ...profile, [e.target.name]: e.target.value });
 
-  const handleSubmit = async (e) => {
+  // αποθήκευση αλλαγών
+  const submit = async (e) => {
     e.preventDefault();
-    setMessage(null);
     try {
-      await updateUserProfile(token, profile);
+      await updateProfile(token, profile);
       toast.success("✅ Το προφίλ ενημερώθηκε!");
       setProfile((prev) => ({ ...prev, password: "" }));
       setIsEditing({ username: false, email: false });
@@ -154,7 +155,7 @@ const handleRemoveFav = (activityId) => {
       
       <div className="row g-4">
         
-        {/* --- ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ: PROFILE & SETTINGS (40%) --- */}
+        {/* προφίλ & ρυθμίσεις */}
         <div className="col-lg-4">
           <div className="bento-card p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '24px' }}>
             
@@ -175,14 +176,13 @@ const handleRemoveFav = (activityId) => {
               <p className="small mb-0" style={{ color: 'var(--text-muted)' }}>{profile.email}</p>
             </div>
 
-            {/* Settings Form */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={submit}>
               <h6 className="fw-bold mb-3" style={{ color: 'var(--text-main)' }}>Ρυθμίσεις Λογαριασμού</h6>
 
               <div className="mb-3">
                 <label className="form-label small text-muted mb-1">Όνομα Χρήστη</label>
                 <div className="input-group compact-input">
-                  <input ref={usernameRef} type="text" name="username" className="form-control bg-transparent text-reset border-end-0" value={profile.username || ""} onChange={handleChange} required disabled={!isEditing.username} style={{ borderColor: 'var(--card-border)' }} />
+                  <input ref={usernameRef} type="text" name="username" className="form-control bg-transparent text-reset border-end-0" value={profile.username || ""} onChange={change} required disabled={!isEditing.username} style={{ borderColor: 'var(--card-border)' }} />
                   <button className="btn border-start-0" type="button" onClick={() => enableEdit("username")} style={{ borderColor: 'var(--card-border)', color: 'var(--text-muted)' }}><Pencil size={14} /></button>
                 </div>
               </div>
@@ -190,7 +190,7 @@ const handleRemoveFav = (activityId) => {
               <div className="mb-3">
                 <label className="form-label small text-muted mb-1">Email</label>
                 <div className="input-group compact-input">
-                  <input ref={emailRef} type="email" name="email" className="form-control bg-transparent text-reset border-end-0" value={profile.email || ""} onChange={handleChange} required disabled={!isEditing.email} style={{ borderColor: 'var(--card-border)' }} />
+                  <input ref={emailRef} type="email" name="email" className="form-control bg-transparent text-reset border-end-0" value={profile.email || ""} onChange={change} required disabled={!isEditing.email} style={{ borderColor: 'var(--card-border)' }} />
                   <button className="btn border-start-0" type="button" onClick={() => enableEdit("email")} style={{ borderColor: 'var(--card-border)', color: 'var(--text-muted)' }}><Pencil size={14} /></button>
                 </div>
               </div>
@@ -198,7 +198,7 @@ const handleRemoveFav = (activityId) => {
               <div className="mb-3">
                 <label className="form-label small text-muted mb-1">Αλλαγή Κωδικού</label>
                 <div className="input-group compact-input">
-                  <input type={showPassword ? "text" : "password"} name="password" className="form-control bg-transparent text-reset border-end-0" placeholder="••••••••" value={profile.password || ""} onChange={handleChange} autoComplete="new-password" style={{ borderColor: 'var(--card-border)' }} />
+                  <input type={showPassword ? "text" : "password"} name="password" className="form-control bg-transparent text-reset border-end-0" placeholder="••••••••" value={profile.password || ""} onChange={change} autoComplete="new-password" style={{ borderColor: 'var(--card-border)' }} />
                   <button className="btn border-start-0" type="button" onClick={() => setShowPassword(!showPassword)} style={{ borderColor: 'var(--card-border)', color: 'var(--text-muted)' }}>
                     {showPassword ? <EyeSlash size={14} /> : <Eye size={14} />}
                   </button>
@@ -209,25 +209,20 @@ const handleRemoveFav = (activityId) => {
 
               <div className="mb-3">
                 <label className="form-label small text-muted mb-1">Τοποθεσία</label>
-                <input type="text" name="location" className="form-control bg-transparent text-reset compact-input" placeholder="π.χ. Αθήνα" value={profile.location || ""} onChange={handleChange} style={{ borderColor: 'var(--card-border)' }} />
+                <input type="text" name="location" className="form-control bg-transparent text-reset compact-input" placeholder="π.χ. Αθήνα" value={profile.location || ""} onChange={change} style={{ borderColor: 'var(--card-border)' }} />
               </div>
 
               <div className="mb-3">
                 <label className="form-label small text-muted mb-1">Ενδιαφέροντα</label>
-                <textarea name="interests" className="form-control bg-transparent text-reset compact-input" rows="2" placeholder="Φαγητό, Θέατρο..." value={profile.interests || ""} onChange={handleChange} style={{ borderColor: 'var(--card-border)' }} />
+                <textarea name="interests" className="form-control bg-transparent text-reset compact-input" rows="2" placeholder="Φαγητό, Θέατρο..." value={profile.interests || ""} onChange={change} style={{ borderColor: 'var(--card-border)' }} />
               </div>
 
               <div className="mb-3">
                 <label className="form-label small text-muted mb-1">Σύνηθες Budget (€)</label>
-                <input type="number" name="budget" className="form-control bg-transparent text-reset compact-input" placeholder="30" value={profile.budget || ""} onChange={handleChange} style={{ borderColor: 'var(--card-border)' }} />
+                <input type="number" name="budget" className="form-control bg-transparent text-reset compact-input" placeholder="30" value={profile.budget || ""} onChange={change} style={{ borderColor: 'var(--card-border)' }} />
               </div>
 
-              {message && (
-                <div className={`alert ${message === "success" ? "alert-success" : "alert-danger"} rounded-3 py-2 small border-0 mt-3`}>
-                  {messageText}
-                </div>
-              )}
-
+             
               <button type="submit" className="btn w-100 mt-2 fw-bold py-2 rounded-pill" style={{ background: 'var(--text-main)', color: 'var(--bg-color)' }}>
                 Αποθήκευση
               </button>
@@ -235,10 +230,10 @@ const handleRemoveFav = (activityId) => {
           </div>
         </div>
 
-        {/* --- ΔΕΞΙΑ ΣΤΗΛΗ: ΑΓΑΠΗΜΕΝΑ & ΙΣΤΟΡΙΚΟ (60%) --- */}
+        {/* αγαπημένα & ιστορικό */}
         <div className="col-lg-8 d-flex flex-column gap-4">
           
-          {/* Card Αγαπημένων */}
+          {/* λίστα αγαπημένων */}
           <div className="bento-card p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '24px' }}>
             <h5 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: '#FF3B30' }}>
               <HeartFill size={18} /> Αγαπημένα
@@ -269,7 +264,7 @@ const handleRemoveFav = (activityId) => {
             )}
           </div>
 
-          {/* Card Ιστορικού */}
+          {/* ιστορικο */}
           <div className="bento-card p-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '24px' }}>
             <h5 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: 'var(--accent-color)' }}>
               <ClockHistory size={18} /> Πρόσφατα Είδατε

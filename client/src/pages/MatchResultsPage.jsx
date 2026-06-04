@@ -11,10 +11,10 @@ export default function MatchResultsPage() {
 
   const token = localStorage.getItem("token");
 
+  // φορτώνουμε την κατάταξη των ψήφων
   useEffect(() => {
-    const fetchMatches = async () => {
+    const loadResults = async () => {
       try {
-        // ΕΔΩ ΗΤΑΝ ΤΟ ΛΑΘΟΣ: Τώρα χτυπάμε το '/swipe/results/' για να πάρουμε τα votes!
         const res = await axios.get(`/api/group/swipe/results/${sessionId}`, {
            headers: { Authorization: `Bearer ${token}` }
         });
@@ -30,7 +30,7 @@ export default function MatchResultsPage() {
     };
 
     if (sessionId) {
-      fetchMatches();
+      loadResults();
     }
   }, [sessionId, token]);
 
@@ -45,14 +45,18 @@ export default function MatchResultsPage() {
     );
   }
 
+  // 100% match (όλοι ψήφισαν ναι)
   const perfectMatches = matches.filter(m => m.votes === m.maxVotes && m.maxVotes > 0);
-  const runnerUps = matches.filter(m => m.votes < m.maxVotes && m.votes >= Math.floor(m.maxVotes / 2));
-
+  // πάνω από τους μισούς ψήφισαν ναι
+  const others = matches.filter(m => m.votes < m.maxVotes && m.votes >= Math.floor(m.maxVotes / 2));
+  
   return (
     <div className="container position-relative" style={{ minHeight: "100vh", paddingTop: "30px", paddingBottom: "120px" }}>
       
+      {/* background εφέ */}
       <div className="position-absolute" style={{ width: '400px', height: '400px', background: 'var(--accent-color)', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.15', top: '5%', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}></div>
 
+      {/* header */}
       <div className="text-center mb-5 position-relative z-1">
         <span className="badge rounded-pill px-3 py-2 mb-3 shadow-sm fw-bold text-uppercase d-inline-flex align-items-center gap-2" 
               style={{ background: "rgba(212, 175, 55, 0.15)", color: "var(--accent-color)", border: '1px solid var(--accent-color)', letterSpacing: "1px" }}>
@@ -64,7 +68,8 @@ export default function MatchResultsPage() {
 
       <div className="row justify-content-center position-relative z-1">
         <div className="col-lg-8">
-          
+         
+          {/* απόλυτα matches */}
           {perfectMatches.length > 0 ? (
             <div className="perfect-matches-container mb-5">
               <h4 className="fw-bold mb-4 d-flex align-items-center gap-2" style={{ color: "var(--text-main)" }}>
@@ -96,12 +101,13 @@ export default function MatchResultsPage() {
               <p style={{ color: "var(--text-muted)" }}>Κανείς δεν τα βρήκε σε όλα. Δείτε τις εναλλακτικές παρακάτω ή κάντε νέο γύρο!</p>
             </div>
           )}
-
-          {runnerUps.length > 0 && (
-            <div className="runner-ups-container mb-5">
+          
+          {/* εναλλακτικές επιλογές */}
+          {others.length > 0 && (
+            <div className="others-container mb-5">
               <h5 className="fw-bold mb-3" style={{ color: "var(--text-muted)" }}>Εναλλακτικές (Πλειοψηφία)</h5>
               <div className="d-flex flex-column gap-3">
-                {runnerUps.map((match, index) => (
+                {others.map((match, index) => (
                   <div key={match.id || index} className="bento-card p-3 d-flex align-items-center gap-3 transition-btn" style={{ borderRadius: "16px" }}>
 <img 
   src={match.image_url || match.image || "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800"} 
@@ -125,6 +131,7 @@ export default function MatchResultsPage() {
             </div>
           )}
 
+          {/* actions */}
           <div className="d-flex flex-column flex-md-row gap-3 mt-5 mb-5 pb-4">
             <button onClick={() => navigate(`/lobby/${sessionId}`)} className="btn w-100 py-3 rounded-pill fw-bold transition-btn d-flex align-items-center justify-content-center gap-2 shadow-lg" 
                     style={{ background: "var(--accent-color)", color: "#000", fontSize: "1.1rem" }}>

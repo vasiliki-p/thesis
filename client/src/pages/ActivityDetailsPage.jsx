@@ -17,19 +17,18 @@ export default function ActivityDetailsPage() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false); 
 
-  // Παίρνουμε το token!
   const token = localStorage.getItem("token"); 
 
   useEffect(() => {
-    const fetchActivity = async () => {
+    const loadActivity = async () => {
       try {
         setLoading(true);
         const response = await axios.get(`/api/activities/${id}`);
         setActivity(response.data);
         setLoading(false);
 
+        // αν είναι logged in, το βάζουμε στο ιστορικό
         if (token) {
-          // Η addToHistory θέλει ΜΟΝΟ το id πλέον!
           addToHistory(id).catch(err => console.error("History log failed", err));
         }
       } catch (err) {
@@ -38,10 +37,10 @@ export default function ActivityDetailsPage() {
         setLoading(false);
       }
     };
-    fetchActivity();
+    loadActivity();
   }, [id, token]);
 
-  const handleJoinLobby = async () => {
+  const joinLobby = async () => {
     const storedUser = localStorage.getItem('user');
     const user = storedUser ? JSON.parse(storedUser) : null;
     
@@ -52,13 +51,12 @@ export default function ActivityDetailsPage() {
     }
 
     try {
-      // Στέλνουμε το token στα headers και βγάζουμε το userId από το body
       const response = await axios.post('/api/lobby/join', 
         {
           activityId: id,
           userName: user ? (user.username || user.name || "Εξερευνητής") : "Guest"
         },
-        { headers: { Authorization: `Bearer ${token}` } } // Το token!
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       
       if (response.data.success) {
@@ -69,7 +67,7 @@ export default function ActivityDetailsPage() {
     }
   };
 
-  const handleShare = async () => {
+  const copyLink = async () => {
     if (!activity) return;
     const url = window.location.href;
     const cost = Number(activity.cost) === 0 ? "Δωρεάν" : `${activity.cost}€`;
@@ -95,7 +93,6 @@ export default function ActivityDetailsPage() {
         {/* --- 1. HEADER & TOP INFO --- */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
           <div>
-            {/* ΔΙΟΡΘΩΣΗ: Αφαίρεση της κλάσης "btn" για να μην παίρνει το background του App.css */}
             <button 
               onClick={() => navigate(-1)} 
               className="mb-4 d-inline-flex align-items-center gap-2 fw-bold transition-btn shadow-sm" 
@@ -125,18 +122,18 @@ export default function ActivityDetailsPage() {
               </span>
             </div>
           </div>
-
+          
+          {/* share */}
           <div className="d-flex gap-3 align-items-center align-self-start mt-3 mt-md-0">
-            {/* ΔΙΟΡΘΩΣΗ: Αφαίρεση της κλάσης "btn" από την Κοινοποίηση */}
             <button 
-              onClick={handleShare} 
+              onClick={copyLink} 
               className="d-flex align-items-center gap-2 rounded-pill fw-bold transition-btn shadow-sm" 
               style={{ border: '1px solid var(--card-border)', color: 'var(--text-main)', background: 'var(--card-bg)', padding: '12px 24px', cursor: 'pointer' }}
             >
               {copied ? <CheckCircleFill className="text-success" /> : <ShareFill />} <span className="d-none d-md-inline">{copied ? "Αντιγράφηκε" : "Κοινοποίηση"}</span>
             </button>
             
-            {/* ΚΑΡΔΟΥΛΑ - ΚΑΘΑΡΟ BENTO ΚΟΥΜΠΙ */}
+          {/* like */}
             <div 
               className="rounded-pill d-flex align-items-center justify-content-center transition-btn shadow-sm" 
               style={{ border: '1px solid var(--card-border)', background: 'var(--card-bg)', width: '48px', height: '48px', display: 'flex' }}
@@ -146,7 +143,7 @@ export default function ActivityDetailsPage() {
           </div>
         </div>
 
-        {/* --- 2. GALLERY HERO --- */}
+        {/* κεντρική εικόνα */}
         <div className="w-100 mb-5 overflow-hidden shadow-sm" style={{ height: '50vh', minHeight: '400px', borderRadius: '32px', background: 'var(--card-bg)' }}>
           <img 
             src={activity.image_url || "https://images.unsplash.com/photo-1555993539-1732b0258235?auto=format&fit=crop&w=1200&q=80"} 
@@ -158,13 +155,11 @@ export default function ActivityDetailsPage() {
           />
         </div>
 
-        {/* --- 3. DUAL COLUMN LAYOUT --- */}
         <div className="row g-5">
           
-          {/* ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ */}
+          {/* αριστερή στήλη (AI insight & reviews) */}
           <div className="col-lg-7 col-xl-8">
             
-            {/* --- AI PYXIS INSIGHT --- */}
             <div className="bento-card p-4 mb-4 d-flex align-items-start gap-3" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderLeft: '4px solid var(--accent-color)', borderRadius: '24px' }}>
               <div className="p-2 rounded-circle d-flex align-items-center justify-content-center" style={{ background: 'rgba(23, 224, 160, 0.15)' }}>
                 <Magic size={24} style={{ color: 'var(--accent-color)' }} />
@@ -182,11 +177,11 @@ export default function ActivityDetailsPage() {
             </div>
           </div>
 
-          {/* ΔΕΞΙΑ ΣΤΗΛΗ */}
+          {/* δεξιά στήλη (info, chat, map) */}
           <div className="col-lg-5 col-xl-4">
           <div className="sticky-top" style={{ top: '120px', zIndex: 10 }}>
               
-              {/* 💸 BENTO BLOCK 1: Η ΤΙΜΗ */}
+              {/* τιμή */}
               <div className="bento-card p-4 mb-3 d-flex align-items-center justify-content-between" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '24px' }}>
                 <div>
                   <span className="small text-muted fw-bold text-uppercase d-block mb-1" style={{ letterSpacing: '0.5px', fontSize: '0.7rem' }}>Κόστος Εμπειρίας</span>
@@ -204,7 +199,7 @@ export default function ActivityDetailsPage() {
                 </span>
               </div>
 
-              {/* ⏱️ BENTO BLOCK 2: ΔΙΑΡΚΕΙΑ */}
+              {/* διάρκεια */}
               <div className="bento-card p-4 mb-4 d-flex align-items-center justify-content-between" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '24px' }}>
                 <div>
                   <span className="small text-muted fw-bold text-uppercase d-block mb-1" style={{ letterSpacing: '0.5px', fontSize: '0.7rem' }}>Εκτιμώμενος Χρόνος</span>
@@ -214,7 +209,7 @@ export default function ActivityDetailsPage() {
                 </div>
               </div>
 
-              {/* 🌟 SOCIAL LOBBY WIDGET */}
+              {/* public chat room */}
               <div className="p-4 text-white border-0 position-relative overflow-hidden mb-4 shadow-sm" style={{ background: 'var(--text-main)', borderRadius: '32px' }}>
                 <div className="position-absolute" style={{ width: '150px', height: '150px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%', top: '-20px', right: '-20px' }}></div>
                 <div className="d-flex align-items-center mb-3 position-relative z-1">
@@ -231,12 +226,12 @@ export default function ActivityDetailsPage() {
                     <div className="bg-white text-dark d-flex align-items-center justify-content-center fw-bold rounded-circle border border-2 border-white" style={{ width: '32px', height: '32px', marginLeft: '-12px', zIndex: 1, fontSize: '11px' }}>+8</div>
                   </div>
                 </div>
-                <button onClick={handleJoinLobby} className="btn bg-white w-100 fw-bold py-3 shadow-sm position-relative z-1 transition-btn rounded-pill" style={{ color: 'var(--text-main)', border: 'none' }}>
+                <button onClick={joinLobby} className="btn bg-white w-100 fw-bold py-3 shadow-sm position-relative z-1 transition-btn rounded-pill" style={{ color: 'var(--text-main)', border: 'none' }}>
                   Άνοιγμα Live Chat
                 </button>
               </div>
 
-              {/* MAP WIDGET */}
+              {/* χάρτης (μίνι) */}
               <div className="bento-card p-3 d-flex flex-column" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '32px', height: "350px" }}>
                 <div className="flex-grow-1 overflow-hidden mb-3" style={{ borderRadius: '20px' }}>
                   <Map key={activity.id} activities={[activity]} />

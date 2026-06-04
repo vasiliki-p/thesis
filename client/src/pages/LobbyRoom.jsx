@@ -19,13 +19,12 @@ export default function LobbyRoom() {
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const displayName = user.username || "Guest"; 
   
-  // Παίρνουμε το Token
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    // Α. Φόρτωση του Τίτλου (Activity ή Lobby)
+    // φέρνουμε πληροφορίες για το δωμάτιο (αν είναι group ή activity)
     if (isNaN(id)) {
-        // ΕΔΩ θέλει token γιατί τα group routes είναι πλέον κλειδωμένα!
+        // θέλει token γιατί τα group routes είναι πλέον κλειδωμένα!
         axios.get(`/api/group/info/${id}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
@@ -37,7 +36,7 @@ export default function LobbyRoom() {
         .catch(() => setActivity({ title: "Live Chat Δραστηριότητας" }));
     }
     
-    // Β. Φόρτωση των Παλιών Μηνυμάτων (Αυτό έλειπε!)
+    // φέρνουμε το ιστορικό του chat
     axios.get(`/api/lobby/messages/${id}`)
     .then(res => {
         const formattedMessages = res.data.map(msg => ({
@@ -53,30 +52,33 @@ export default function LobbyRoom() {
     .catch(err => console.error("Σφάλμα φόρτωσης μηνυμάτων:", err));
 
 
-    // Γ. Σύνδεση στα WebSockets
+    // live σύνδεση με sockets
     if (user.id && !hasJoined.current) {
         socket.emit("join-lobby", { activityId: id, userId: user.id, userName: displayName });
         hasJoined.current = true;
     }
     
-    const handleLobbyUpdate = (data) => {
+    const lobbyUpdate = (data) => {
         if (data.activityId === id) {
+            // κρατάμε τους μοναδικούς χρήστες
             const unique = data.members.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i);
             setParticipants(unique);
         }
     };
 
-    socket.on("lobby-updated", handleLobbyUpdate);
+    socket.on("lobby-updated", lobbyUpdate);
     socket.on("receive-message", (msg) => {
         if (msg.userId !== user.id) { setMessages(prev => [...prev, msg]); }
     });
 
+    // cleanup όταν φεύγει ο χρήστης
     return () => {
-        socket.off("lobby-updated", handleLobbyUpdate);
+        socket.off("lobby-updated", lobbyUpdate);
         socket.off("receive-message");
     };
   }, [id, user.id, displayName]);
 
+  // disconnect στο unmount
   useEffect(() => {
     return () => {
         if (user.id) {
@@ -86,6 +88,7 @@ export default function LobbyRoom() {
     };
   }, []);
 
+  // αποστολή μηνύματος
   const sendMessage = () => {
     if (!input.trim()) return;
     const msgData = { 
@@ -101,7 +104,7 @@ export default function LobbyRoom() {
     setInput("");
   };
 
-
+  // auto-scroll κάτω όταν έρχεται νέο μήνυμα
 useEffect(() => {
     if (chatContainerRef.current) {
         // Κάνει scroll ΜΟΝΟ τον εαυτό του, όχι όλη τη σελίδα!
@@ -114,9 +117,9 @@ useEffect(() => {
 
   return (
     <div className="container" style={{ paddingTop: "30px", paddingBottom: "100px", display: "flex", flexDirection: "column", gap: "24px" }}>
+      {/* header δωματίου */}
       <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-2">
        <div className="d-flex align-items-center gap-3">
-          {/* 1. Απλό, κυκλικό κουμπί Πίσω */}
           <button 
             className="btn rounded-circle shadow-sm transition-btn d-flex align-items-center justify-content-center" 
             style={{ width: "42px", height: "42px", background: "var(--card-bg)", border: "1px solid var(--card-border)", color: 'var(--text-main)' }} 
@@ -126,12 +129,11 @@ useEffect(() => {
             <ArrowLeft size={20} />
           </button>
           
-          {/* Τίτλος Lobby */}
+          {/* τίτλος Lobby */}
           <h2 className="m-0 fw-bold text-truncate" style={{ color: 'var(--text-main)', letterSpacing: "-1px", maxWidth: "200px" }}>
             {activity?.title || "Lobby"}
           </h2>
           
-          {/* 2. Ξεκάθαρο κόκκινο κουμπί Αποχώρησης */}
           <button 
             className="btn rounded-pill px-3 py-1 fw-bold shadow-sm transition-btn ms-2 d-none d-md-block" 
             style={{ background: "#fee2e2", border: "1px solid #f87171", color: '#dc2626', fontSize: "0.85rem" }} 
@@ -140,6 +142,9 @@ useEffect(() => {
             Αποχώρηση
           </button>
         </div>
+
+
+        {/* online χρήστες */}
         <div className="d-flex align-items-center">
           <div className="d-flex me-3">
             {participants.map((p, index) => (
@@ -150,10 +155,14 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* chat window */}
       <div className="card shadow-lg border-0 overflow-hidden" style={{ height: "75vh", background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '28px' }}>
         <div className="p-4 d-flex align-items-center justify-content-between" style={{ borderBottom: '1px solid var(--card-border)' }}>
           <div className="d-flex align-items-center gap-2"><span className="pulse-dot-live"></span><span className="fw-bold small text-uppercase" style={{ color: "var(--text-main)", letterSpacing: '1px' }}>Live Lobby Chat</span></div>
         </div>
+
+
+        {/* μηνύματα */}
       <div ref={chatContainerRef} className="flex-grow-1 p-4 d-flex flex-column gap-3" style={{ background: "rgba(0,0,0,0.01)", overflowY: "auto" }}>
           {messages.map((msg, index) => {
             const isMe = msg.user === displayName; 
@@ -168,6 +177,8 @@ useEffect(() => {
             );
           })}
         </div>
+
+        {/* input αποστολής */}
         <div className="p-4" style={{ borderTop: '1px solid var(--card-border)' }}>
           <div className="d-flex gap-3 align-items-center p-2" style={{ background: 'var(--bg-color)', border: '1px solid var(--card-border)', borderRadius: "100px" }}>
             <input type="text" className="form-control border-0 bg-transparent px-3" placeholder="Γράψτε ένα μήνυμα..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} style={{ boxShadow: "none", fontWeight: "500", color: 'var(--text-main)' }} />

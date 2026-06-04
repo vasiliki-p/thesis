@@ -12,15 +12,16 @@ export default function StatsPage() {
   const [loading, setLoading] = useState(true);
 
   const userId = localStorage.getItem("user_id");
-  
-  // Premium Neon Παλέτα για το Dark Mode
+
+  // χρώματα για τα γραφήματα
   const COLORS = ["var(--accent-color)", "#8A2BE2", "#00b8ff", "#FFD700", "#FF007F", "#ff4d4d"];
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
         const token = localStorage.getItem("token"); 
-        
+                
+        // τραβάμε κριτικές και δραστηριότητες ταυτόχρονα
         const [reviewsRes, activitiesRes] = await Promise.all([
           axios.get(`/api/reviews/user`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -37,21 +38,20 @@ export default function StatsPage() {
       }
     };
 
-    if (userId) fetchData();
+    if (userId) loadData();
     else setLoading(false);
   }, [userId]);
 
-  // --- Στατιστικά: Ομαδοποίηση ανά ΚΑΤΗΓΟΡΙΑ (Vibe) αντί για τίτλο ---
+  // ομαδοποίηση κριτικών ανά κατηγορία (πχ. φαγητό, ποτό)
   const categoryStats = reviews.reduce((acc, review) => {
     const foundActivity = activities.find(a => Number(a.id) === Number(review.activity_id));
-    // Αν δεν βρει κατηγορία, το βάζει στο "Άλλο"
     const categoryName = foundActivity && foundActivity.category ? foundActivity.category : "Άλλο";
     
     if (!acc[categoryName]) {
       acc[categoryName] = {
         name: categoryName,
         shortName: categoryName.length > 12 ? categoryName.substring(0, 12) + "..." : categoryName,
-        value: 0, // Πόσες φορές έχει πάει σε αυτή την κατηγορία
+        value: 0, // πόσες φορές έχει πάει σε αυτή την κατηγορία
         totalRating: 0,
         avgRating: 0,
       };
@@ -63,12 +63,13 @@ export default function StatsPage() {
   }, {});
 
   const chartData = Object.values(categoryStats);
-
+  
+  // υπολογισμός γενικού μέσου όρου
   const averageRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : "-";
 
-  // Πλέον το most popular είναι το αγαπημένο του "Vibe" (αυτό με τα περισσότερα reviews)
+  // βρίσκουμε την κατηγορία με τις περισσότερες επισκέψεις
   const favoriteVibe = chartData.length > 0
     ? chartData.reduce(
         (prev, current) => (prev.value > current.value ? prev : current),
@@ -104,8 +105,10 @@ export default function StatsPage() {
   return (
     <div className="container position-relative mt-5" style={{ zIndex: 1 }}>
       
+      {/* background εφέ */}
       <div className="position-absolute" style={{ width: '400px', height: '400px', background: 'var(--accent-color)', borderRadius: '50%', filter: 'blur(120px)', opacity: '0.1', top: '10%', right: '10%', zIndex: -1 }}></div>
 
+      {/* header */}
       <div className="text-center mb-5">
         <span className="badge rounded-pill px-3 py-2 mb-3 shadow-sm fw-bold text-uppercase d-inline-flex align-items-center gap-2" 
               style={{ background: "var(--card-bg)", color: "var(--text-main)", border: '1px solid var(--card-border)', letterSpacing: "1px", fontSize: "0.75rem" }}>
@@ -117,7 +120,7 @@ export default function StatsPage() {
         </p>
       </div>
 
-      {/* --- TOP SUMMARY CARDS --- */}
+      {/* καρτελάκια συνόψεων */}
       <div className="row g-4 mb-5">
         <div className="col-md-4">
           <div className="card shadow-sm border-0 rounded-4 p-4 h-100 transition-btn d-flex flex-row align-items-center gap-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '24px' }}>
@@ -156,6 +159,7 @@ export default function StatsPage() {
         </div>
       </div>
 
+      {/* γραφήματα */}
       {chartData.length === 0 ? (
         <div className="alert border text-center py-5 rounded-4 shadow-sm" style={{ background: 'var(--card-bg)', borderColor: 'var(--card-border)' }}>
           <h4 style={{ color: 'var(--text-main)' }}>Δεν υπάρχουν δεδομένα ακόμα.</h4>
@@ -163,7 +167,7 @@ export default function StatsPage() {
         </div>
       ) : (
         <div className="row g-4">
-          {/* PIE CHART */}
+          {/* γράφημα πίτας */}
           <div className="col-lg-6">
             <div className="card shadow-sm border-0 p-4 h-100" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '32px' }}>
               <h5 className="fw-bold mb-4" style={{ color: 'var(--text-main)' }}>📌 Οι Εμπειρίες μου</h5>
@@ -196,7 +200,7 @@ export default function StatsPage() {
             </div>
           </div>
 
-          {/* BAR CHART */}
+          {/* γράφημα με μπάρες */}
           <div className="col-lg-6">
             <div className="card shadow-sm border-0 p-4 h-100" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '32px' }}>
               <h5 className="fw-bold mb-4" style={{ color: 'var(--text-main)' }}>⭐ Βαθμολογία ανά Vibe</h5>

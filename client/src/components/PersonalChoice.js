@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { PatchCheckFill, GeoAltFill } from 'react-bootstrap-icons';
-import { getActivities, getUserProfile } from '../api';
+import { getActivities, getProfile } from '../api';
 
 const PersonalChoice = () => {
   const [choices, setChoices] = useState([]);
@@ -20,7 +20,7 @@ const PersonalChoice = () => {
 
         const [allActivities, userProfile] = await Promise.all([
           getActivities(),
-          getUserProfile(token) 
+          getProfile(token) 
         ]);
 
         if (!userProfile || (!userProfile.location && !userProfile.interests && !userProfile.budget)) {

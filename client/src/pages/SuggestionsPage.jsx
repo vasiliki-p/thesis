@@ -10,31 +10,35 @@ export default function SuggestionsPage() {
   const [error, setError] = useState("");
   const [weatherStatus, setWeatherStatus] = useState(null);
 
-  // Παίρνουμε το token!
   const token = localStorage.getItem("token");
 
+  // default εικόνες αν λείπουν
   const getImage = (act) => {
     if (act.image_url && act.image_url.length > 10) return act.image_url;
     return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800";
   };
 
+  // γρήγορη προσθήκη ενδιαφέροντος
   const addTag = (tag) => {
     const next = filters.interests ? `${filters.interests}, ${tag}` : tag;
     setFilters({ ...filters, interests: next });
   };
 
+  // φόρτωση προτάσεων AI
   const fetchSuggestions = async () => {
     setError("");
     setLoading(true);
     let finalWeather = "Clear"; 
 
     try {
+      //τσεκάρουμε τον καιρό πρώτα
       try {
         const API_KEY = process.env.REACT_APP_OPENWEATHER_API_KEY; 
         
         let cityQuery = filters.location || "Athens";
         const locLower = cityQuery.toLowerCase();
         
+        // απλό mapping για ελληνικές πόλεις
         if (locLower.includes("αθη") || locLower.includes("athen")) cityQuery = "Athens";
         else if (locLower.includes("θεσσαλον") || locLower.includes("thess")) cityQuery = "Thessaloniki";
         else if (locLower.includes("πατρ") || locLower.includes("patr")) cityQuery = "Patras";
@@ -59,7 +63,7 @@ export default function SuggestionsPage() {
       
       setWeatherStatus(finalWeather);
 
-      // Προσθήκη του Token στα Headers
+      //ζητάμε προτάσεις από το δικό μας backend
       const res = await axios.post("/api/ai/suggest", 
         { interests: filters.interests, budget: filters.budget, location: filters.location, weather: finalWeather },
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
@@ -80,7 +84,7 @@ export default function SuggestionsPage() {
   return (
     <div className="container py-5">
       
-      {/* --- ΔΙΟΡΘΩΜΕΝΟ HEADER --- */}
+      {/* header */}
       <div className="text-center mb-5">
         <span className="badge rounded-pill px-3 py-2 mb-3 shadow-sm fw-bold text-uppercase" 
               style={{ background: "var(--accent-color)", color: "#000", letterSpacing: "1px", fontSize: "0.75rem" }}>
@@ -95,7 +99,7 @@ export default function SuggestionsPage() {
         </p>
       </div>
 
-      {/* --- ΔΙΟΡΘΩΜΕΝΑ ΦΙΛΤΡΑ (Bento style) --- */}
+      {/* φίλτρα αναζήτησης */}
       <div className="card shadow-sm border-0 rounded-4 p-4 mb-4" style={{ background: 'var(--card-bg)' }}>
         <div className="row g-3">
           
@@ -138,7 +142,7 @@ export default function SuggestionsPage() {
 
       {error && <div className="alert alert-danger rounded-4 shadow-sm">{error}</div>}
 
-     {/* --- AI WEATHER INSIGHT BANNER --- */}
+      {/* ενημέρωση καιρού από AI */}
       {weatherStatus && suggestions.length > 0 && (
         (() => {
           const isNight = new Date().getHours() < 6 || new Date().getHours() > 20;
@@ -176,7 +180,7 @@ export default function SuggestionsPage() {
         })()
       )}
 
-      {/* --- ΝΕΑ ΑΠΟΤΕΛΕΣΜΑΤΑ (ΝΕΟ PREMIUM DESIGN) --- */}
+      {/* κάρτες αποτελεσμάτων */}
       <div className="row g-4 mt-2">
         {suggestions.map((item) => {
           const descriptionText = item.description?.length > 100 ? `${item.description.substring(0, 100)}...` : item.description;
@@ -198,23 +202,22 @@ export default function SuggestionsPage() {
                   <h5 className="fw-bold mb-3" style={{ color: 'var(--text-main)' }}>{item.title}</h5>
                   <div className="d-flex align-items-center gap-3 small mb-3">
                     
-                    {/* Διορθωμένο Link για Google Maps */}
-                    <a 
-                      href={`https://maps.google.com/?q=${encodeURIComponent(item.title + ' ' + item.location)}`} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="d-flex align-items-center gap-1 text-decoration-none transition-btn" 
-                      style={{ color: 'var(--text-muted)' }}>
-                      <GeoAltFill style={{ color: 'var(--accent-color)' }} /> 
-                      <span style={{ borderBottom: '1px dashed var(--text-muted)' }}>{item.location}</span>
-                    </a>
+                     <a 
+                        href={`https://maps.google.com/?q=${encodeURIComponent(item.title + ' ' + item.location)}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="d-flex align-items-center gap-1 text-decoration-none transition-btn" 
+                        style={{ color: 'var(--text-muted)' }}>
+                        <GeoAltFill style={{ color: 'var(--accent-color)' }} /> 
+                        <span style={{ borderBottom: '1px dashed var(--text-muted)' }}>{item.location}</span>
+                     </a>
                     
                     <span className="fw-bold" style={{ color: 'var(--text-main)' }}>{Number(item.cost) === 0 ? "Free" : `${item.cost}€`}</span>
                   </div>
                   
                   <p className="small mb-3 flex-grow-1" style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>{descriptionText}</p>
 
-                  {/* --- ΑΙΤΙΟΛΟΓΙΑ ΤΗΣ AI --- */}
+                  {/* αιτιολογία AI */}
                   {item.ai_reason && (
                     <div className="alert border-0 small mb-4 py-2 px-3 rounded-3 d-flex align-items-start gap-2" style={{ background: 'rgba(23, 224, 160, 0.1)', borderLeft: '3px solid var(--accent-color)', color: 'var(--text-main)' }}>
                       <Magic style={{ color: 'var(--accent-color)', marginTop: '2px', flexShrink: 0 }} /> 

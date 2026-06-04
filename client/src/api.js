@@ -57,14 +57,14 @@ export const addReview = async (activity_id, rating, comment) => {
 };
 
 // ================= PROFILE =================
-export const getUserProfile = async (token) => {
+export const getProfile = async (token) => {
   const res = await axios.get(`${API_URL}/user/profile`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.data;
 };
 
-export const updateUserProfile = async (token, data) => {
+export const updateProfile = async (token, data) => {
   const res = await axios.put(`${API_URL}/user/profile`, data, {
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -72,7 +72,7 @@ export const updateUserProfile = async (token, data) => {
 };
 
 // ================= STATS =================
-export const getUserStats = async (token) => {
+export const getStats = async (token) => {
   const res = await axios.get(`${API_URL}/user/stats`, {   
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -98,7 +98,7 @@ export const addToHistory = async (activity_id) => {
   );
 };
 
-export const getUserHistory = async () => { 
+export const getHistory = async () => { 
   const token = localStorage.getItem("token");
   if (!token) return [];
 
