@@ -8,15 +8,14 @@ export default function CreateLobbyModal({ show, onClose }) {
   const navigate = useNavigate();
   const [newLobby, setNewLobby] = useState({ name: '', type: 'Διασκέδαση', location: '' });
 
-  // 1. Παίρνουμε το Token από το localStorage
   const token = localStorage.getItem('token');
 
   if (!show) return null;
 
-  const handleCreateLobby = async (e) => {
+  const createLobby = async (e) => {
     e.preventDefault();
     
-    // Έλεγχος ασφαλείας: Αν δεν έχει token, τον στέλνουμε στο login
+  // δημιουργία της νέας παρέας στο backend
     if (!token) {
       toast.error("Πρέπει να συνδεθείς για να δημιουργήσεις παρέα!");
       navigate('/login');
@@ -24,7 +23,6 @@ export default function CreateLobbyModal({ show, onClose }) {
     }
 
     try {
-      // 2. Στέλνουμε τα στοιχεία ΧΩΡΙΣ το hostId, αλλά ΜΕ το Token στα headers
       const response = await axios.post('/api/group/create', {
         isPublic: false, // Είναι private
         lobbyName: newLobby.name,
@@ -34,10 +32,11 @@ export default function CreateLobbyModal({ show, onClose }) {
         headers: { Authorization: `Bearer ${token}` } // <-- Το "κλειδί" μας!
       });
 
-      // 3. Παίρνουμε το ΕΠΙΣΗΜΟ PIN που μας έδωσε η βάση δεδομένων
+      //παίρνουμε το PIN που μας έδωσε η βάση
       const officialPin = response.data.pin;
 
       onClose(); // Κλείνουμε το modal
+      // μας επιστρέφει το PIN και μπαίνουμε απευθείας στο room
       navigate(`/group-swipe/${officialPin}`);
 
     } catch (error) {
@@ -61,7 +60,7 @@ export default function CreateLobbyModal({ show, onClose }) {
           Ρύθμισε το δωμάτιο σου. Μόνο όσοι έχουν το PIN θα μπορούν να μπουν.
         </p>
         
-        <form onSubmit={handleCreateLobby}>
+        <form onSubmit={createLobby}>
           <div className="mb-3">
             <label className="form-label small fw-bold mb-2" style={{ color: 'var(--text-muted)' }}>ΟΝΟΜΑ ΠΑΡΕΑΣ</label>
             <input type="text" required className="form-control border-0" placeholder="π.χ. Nightout στο Κέντρο 🍻" value={newLobby.name} onChange={(e) => setNewLobby({...newLobby, name: e.target.value})} style={{ background: 'var(--bg-color)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '12px', boxShadow: 'none' }} />

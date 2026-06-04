@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
-// 1. Συγκεντρώνουμε όλες τις βασικές ρυθμίσεις σε μια μεταβλητή (dbConfig)
+// βασικές ρυθμίσεις της βάσης από το .env
 const dbConfig = {
   host: process.env.DB_HOST, 
   user: process.env.DB_USER,
@@ -13,24 +13,24 @@ const dbConfig = {
   queueLimit: 0
 };
 
-// 2. Ελέγχουμε πού βρισκόμαστε. Βάζουμε το SSL ΜΟΝΟ αν τρέχει στο Render
+// προσθήκη ssl μόνο όταν η εφαρμογή τρέχει σε production περιβάλλον
 if (process.env.NODE_ENV === 'production') {
   dbConfig.ssl = {
     rejectUnauthorized: false
   };
 }
 
-// 3. Δημιουργούμε τη σύνδεση (pool) βάζοντας μέσα το έτοιμο dbConfig
+// δημιουργία connection pool αντί για απλό connection για καλύτερο performance
 const db = mysql.createPool(dbConfig);
 
-// --- TEST ΣΥΝΔΕΣΗΣ ---
+// αρχικό τεστ για να βεβαιωθούμε ότι η βάση είναι προσβάσιμη
 db.getConnection()
     .then(connection => {
-        console.log("✅ ΕΠΙΤΥΧΗΣ ΣΥΝΔΕΣΗ ΜΕ ΤΗ ΒΑΣΗ (db.js)");
+        console.log("Επιτυχής σύνδεση με τη βάση (db.js)");
         connection.release(); // Την αφήνουμε ελεύθερη
     })
     .catch(err => {
-        console.error("❌ ΣΦΑΛΜΑ ΣΥΝΔΕΣΗΣ ΣΤΟ db.js:", err.message);
+        console.error("Σφάλμα σύνδεσης στο db.js:", err.message);
     });
 
 module.exports = db;

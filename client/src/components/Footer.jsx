@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="container">
         <div className="row g-4">
           
-          {/* 1. Brand Section */}
+          {/* λογότυπο και περιγραφή */}
           <div className="col-lg-4 col-md-6">
             <h4 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
                Pyxis 🧭
@@ -19,7 +19,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* 2. Quick Links */}
+          {/* βασικό μενού */}
           <div className="col-lg-2 col-md-6">
             <h6 className="fw-bold mb-3 text-uppercase small ls-1">Μενου</h6>
             <ul className="list-unstyled d-flex flex-column gap-2">
@@ -30,7 +30,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* 3. Legal / Info */}
+          {/* χρήσιμα links & νομικά */}
           <div className="col-lg-3 col-md-6">
             <h6 className="fw-bold mb-3 text-uppercase small ls-1">Info</h6>
             <ul className="list-unstyled d-flex flex-column gap-2">
@@ -40,7 +40,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* 4. Contact Only (Χωρίς Social) */}
+          {/* στοιχεία επικοινωνίας */}
           <div className="col-lg-3 col-md-6">
             <h6 className="fw-bold mb-3 text-uppercase small ls-1">Επικοινωνια</h6>
             <ul className="list-unstyled text-secondary small mb-0">
@@ -59,6 +59,7 @@ export default function Footer() {
 
         <hr className="border-secondary opacity-25 my-4" />
 
+        {/* copyright & υπογραφή */}
         <div className="row align-items-center">
             <div className="col-md-6 text-center text-md-start">
                 <p className="small text-secondary mb-0">

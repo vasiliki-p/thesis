@@ -5,8 +5,7 @@ const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
 
-// --- 1. ROUTES ---
-const authRoutes = require('./routes/auth'); // Το ΣΩΣΤΟ αρχείο για login/register
+const authRoutes = require('./routes/auth'); 
 const activitiesRoutes = require('./routes/activities');
 const reviewsRoutes = require('./routes/reviews');
 const aiRoutes = require('./routes/ai'); 
@@ -15,8 +14,7 @@ const favouritesRoute = require("./routes/favourites");
 const groupRoutes = require('./routes/group');
 const historyRoute = require('./routes/history');
 
-// --- 2. MIDDLEWARE ΑΣΦΑΛΕΙΑΣ ---
-const authenticateToken = require('./middleware/auth'); // Το φίλτρο για τα tokens
+const authenticateToken = require('./middleware/auth'); 
 
 const db = require('./db');
 
@@ -38,7 +36,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- 3. DATA STORAGE ΓΙΑ ΤΑ LOBBIES ---
-// Αυτό κρατάει τους χρήστες που είναι online ανά δραστηριότητα
+// κρατάει τους χρήστες που είναι online ανά δραστηριότητα
 let publicLobbies = {}; 
 
 app.get('/api/lobbies/active', (req, res) => {
@@ -96,7 +94,7 @@ app.post('/api/lobby/join', authenticateToken, (req, res) => {
     res.json({ success: true, members: publicLobbies[activityId] });
 });
 
-// --- 4. SOCKET.IO (Real-time Chat) ---
+// Real-time Chat
 io.on('connection', (socket) => {
 
     socket.on("join-lobby", ({ activityId, userId, userName }) => {
@@ -104,19 +102,19 @@ io.on('connection', (socket) => {
 
         socket.join(`lobby_${activityId}`);
         socket.currentLobby = activityId;
-        // Το σώζουμε στο socket πάντα ως String
+        //πάντα String
         socket.userId = String(userId); 
 
         if (!publicLobbies[activityId]) publicLobbies[activityId] = [];
 
         setTimeout(() => {
-            // Καθαρισμός διπλότυπων με σύγκριση String
+            // καθαρισμός διπλότυπων με σύγκριση String
             publicLobbies[activityId] = publicLobbies[activityId].filter(u => String(u.id) !== String(userId));
             
-            // Προσθήκη χρήστη στη λίστα
+            // προσθήκη χρήστη στη λίστα
             publicLobbies[activityId].push({ id: String(userId), name: userName });
 
-            // Ενημέρωση όλων για τη νέα λίστα συμμετεχόντων
+            // ενημέρωση όλων για τη νέα λίστα συμμετεχόντων
             io.emit("lobby-updated", { 
                 activityId, 
                 members: publicLobbies[activityId] 
@@ -124,34 +122,33 @@ io.on('connection', (socket) => {
         }, 100);
     });
 
-    // ΒΑΛΑΜΕ async ΕΔΩ
     socket.on("leave-lobby", async ({ activityId, userId }) => { 
         if (publicLobbies[activityId]) {
-            // 1. Βρίσκουμε ποιος χρήστης φεύγει για να τυπώσουμε το μήνυμα
+            // βρίσκουμε ποιος χρήστης φεύγει για να τυπώσουμε το μήνυμα
             const userLeaving = publicLobbies[activityId].find(u => String(u.id) === String(userId));
             if (userLeaving) {
                 console.log(`User ${userLeaving.name} left Lobby ${activityId}`);
             }
 
-            // 2. Αφαιρούμε τον χρήστη από τη λίστα
+            // αφαιρούμε τον χρήστη από τη λίστα
             publicLobbies[activityId] = publicLobbies[activityId].filter(u => String(u.id) !== String(userId));
             
-            // 3. Ενημερώνουμε τους υπόλοιπους ότι κάποιος έφυγε
+            // ενημερώνουμε τους υπόλοιπους ότι κάποιος έφυγε
             io.emit("lobby-updated", { 
                 activityId, 
                 members: publicLobbies[activityId] 
             });
             
-            // 4. Βγάζουμε το socket από το συγκεκριμένο "δωμάτιο"
+            // βγάζουμε το socket από το συγκεκριμένο δωμάτιο
             socket.leave(`lobby_${activityId}`);
 
-            // 🚀 5. ΑΥΤΟΚΑΤΑΣΤΡΟΦΗ: Αν το δωμάτιο άδειασε, το διαγράφουμε!
+            // αν το δωμάτιο άδειασε το διαγράφουμε
             if (publicLobbies[activityId].length === 0) {
-                console.log(`Lobby ${activityId} is now empty. Self-destructing... 💥`);
+                console.log(`Lobby ${activityId} is now empty. Self-destructing... `);
                 delete publicLobbies[activityId]; // Διαγραφή από τη μνήμη
 
                 try {
-                    // Διαγραφή από τη βάση (για να φύγει από το Ραντάρ)
+                    // διαγραφή από τη βάση 
                     await db.query("DELETE FROM group_sessions WHERE session_id = ?", [String(activityId)]);
                 } catch (err) {
                     console.error("Error deleting empty lobby from DB:", err);
@@ -161,11 +158,11 @@ io.on('connection', (socket) => {
     });
 
     socket.on("send-message", async (data) => {
-        // Προώθηση σε όλους
+        // προώθηση σε όλους
         io.to(`lobby_${data.activityId}`).emit("receive-message", data);
         
         try {
-            // Αποθήκευση στη βάση
+            // αποθήκευση στη βάση
             await db.query(
                 "INSERT INTO lobby_messages (activity_id, user_id, user_name, message_text) VALUES (?, ?, ?, ?)",
                 [data.activityId, data.userId, data.user, data.text]
@@ -175,33 +172,32 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ΒΑΛΑΜΕ async ΕΔΩ
     socket.on('disconnect', async () => { 
         if (socket.currentLobby && publicLobbies[socket.currentLobby]) {
             const activityId = socket.currentLobby;
 
-            // 1. Βρίσκουμε ποιος χρήστης αποσυνδέθηκε ξαφνικά
+            // βρίσκουμε ποιος χρήστης αποσυνδέθηκε ξαφνικά
             const userLeaving = publicLobbies[activityId].find(u => String(u.id) === String(socket.userId));
             if (userLeaving) {
                 console.log(`User ${userLeaving.name} left Lobby ${activityId} (Disconnected)`);
             }
 
-            // 2. Αφαίρεση χρήστη
+            // αφαίρεση χρήστη
             publicLobbies[activityId] = publicLobbies[activityId].filter(u => String(u.id) !== String(socket.userId));
             
-            // 3. Ενημέρωση υπολοίπων
+            // ενημέρωση υπολοίπων
             io.emit("lobby-updated", { 
                 activityId: activityId, 
                 members: publicLobbies[activityId] 
             });
 
-            // 🚀 4. ΑΥΤΟΚΑΤΑΣΤΡΟΦΗ: Αν το δωμάτιο άδειασε επειδή έκλεισε το tab!
+            //αν το δωμάτιο άδειασε επειδή έκλεισε το tab
             if (publicLobbies[activityId].length === 0) {
                 console.log(`Lobby ${activityId} is now empty after disconnect. Self-destructing... 💥`);
-                delete publicLobbies[activityId]; // Διαγραφή από τη μνήμη
+                delete publicLobbies[activityId]; // διαγραφή από τη μνήμη
 
                 try {
-                    // Διαγραφή από τη βάση
+                    // διαγραφή από τη βάση
                     await db.query("DELETE FROM group_sessions WHERE session_id = ?", [String(activityId)]);
                 } catch (err) {
                     console.error("Error deleting empty lobby from DB:", err);
@@ -211,11 +207,8 @@ io.on('connection', (socket) => {
     });
 });
 
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'client/build')));
-}   
- 
-// --- 5. ROUTES SETUP ---
+
+// api endpoints 
 app.use('/api', authRoutes);
 app.use('/api/activities', activitiesRoutes);
 app.use('/api/reviews', reviewsRoutes);
@@ -225,18 +218,14 @@ app.use("/api/favourites", favouritesRoute);
 app.use("/api/history", historyRoute);
 app.use('/api/group', groupRoutes);
 
-// ΕΔΩ ΕΙΝΑΙ Η ΑΛΛΑΓΗ ΠΟΥ ΑΠΟΦΕΥΓΕΙ ΤΟ ΑΣΤΕΡΑΚΙ (*)
 if (process.env.NODE_ENV === 'production') {
-  // Σερβίρουμε τα στατικά αρχεία από το build
   app.use(express.static(path.join(__dirname, 'client/build')));
 
-  // Αντί για app.get('*', ...), χρησιμοποιούμε middleware για όλα τα requests
   app.use((req, res, next) => {
-    // Αν το request δεν είναι API, στείλε το index.html
     if (!req.path.startsWith('/api')) {
       return res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
     }
-    next(); // Αν είναι API, προχώρα κανονικά
+    next(); 
   });
 } else {
   app.get('/', (req, res) => {
@@ -244,8 +233,7 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// --- 6. SERVER START ---
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-    console.log(`🚀 Server is LIVE on port ${PORT}`);
+    console.log(`Server is live on port ${PORT}`);
 });

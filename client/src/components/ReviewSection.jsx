@@ -3,19 +3,17 @@ import axios from 'axios';
 import { StarFill, ChatLeftTextFill, SendFill } from 'react-bootstrap-icons';
 import toast from 'react-hot-toast';
 
-// 1. Αφαιρέσαμε το userId από τα props
 export default function ReviewSection({ activityId }) {
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(5);
   const [loading, setLoading] = useState(true);
 
-  // 2. Παίρνουμε το token για να ξέρουμε αν ο χρήστης είναι συνδεδεμένος
   const token = localStorage.getItem("token");
 
-  // --- 1. FETCH ΚΡΙΤΙΚΩΝ ---
+  // φόρτωση κριτικών από το backend
   useEffect(() => {
-    const fetchReviews = async () => {
+    const loadReviews = async () => {
       try {
         setLoading(true);
         const res = await axios.get(`/api/reviews/${activityId}`);
@@ -27,11 +25,11 @@ export default function ReviewSection({ activityId }) {
       }
     };
 
-    if (activityId) fetchReviews();
+    if (activityId) loadReviews();
   }, [activityId]);
 
-  // --- 2. POST ΝΕΑΣ ΚΡΙΤΙΚΗΣ ---
-  const handleSubmit = async (e) => {
+  // υποβολή νέας κριτικής
+  const submitReview = async (e) => {
     e.preventDefault();
 
     try {
@@ -39,7 +37,6 @@ export default function ReviewSection({ activityId }) {
       const user = storedUser ? JSON.parse(storedUser) : null;
       const userName = user ? (user.username || "Χρήστης") : "Χρήστης";
 
-      // 3. Στέλνουμε ΜΟΝΟ το comment και το activity_id, και το TOKEN στα headers!
       const response = await axios.post('/api/reviews', {
         activity_id: activityId,
         comment: newReview, 
@@ -47,8 +44,8 @@ export default function ReviewSection({ activityId }) {
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      // Φτιάχνουμε το object για να φανεί αμέσως στην οθόνη
+      
+      // optimistic update: βάζουμε την κριτική κατευθείαν στο state για να φανεί αμέσως
       const newRevObj = {
         id: response.data.id || Date.now(),
         username: userName, 
@@ -56,8 +53,10 @@ export default function ReviewSection({ activityId }) {
         rating: rating,
         created_at: new Date().toISOString()
       };
-
+      
       setReviews([newRevObj, ...reviews]);
+      
+      // καθάρισμα φόρμας
       setNewReview("");
       setRating(5);
     } catch (err) {
@@ -66,6 +65,7 @@ export default function ReviewSection({ activityId }) {
     }
   };
 
+  // βοηθητική συνάρτηση για να ζωγραφίζει τα αστεράκια
   const renderStars = (currentRating, interactive = false) => {
     return [...Array(5)].map((_, index) => {
       const starValue = index + 1;
@@ -106,11 +106,11 @@ export default function ReviewSection({ activityId }) {
         <ChatLeftTextFill style={{ color: 'var(--accent-color)' }} /> Κριτικές
       </h4>
 
-      {/* 4. Χρησιμοποιούμε το token αντί για το userId για τον έλεγχο */}
+      {/* φόρμα κριτικής (μόνο αν είναι logged in) */}
       {token ? (
         <div className="p-4 mb-5 rounded-4" style={{ background: 'rgba(128,128,128,0.05)', border: '1px solid var(--card-border)' }}>
           <h6 className="fw-bold mb-3" style={{ color: 'var(--text-main)' }}>Γράψε την εμπειρία σου</h6>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={submitReview}>
             <div className="mb-3 d-flex align-items-center gap-2">
               <span className="small fw-bold" style={{ color: 'var(--text-muted)' }}>Βαθμολογία:</span>
               <div className="d-flex align-items-center mt-1">
@@ -150,7 +150,7 @@ export default function ReviewSection({ activityId }) {
         </div>
       )}
 
-      {/* ΛΙΣΤΑ ΚΡΙΤΙΚΩΝ */}
+      {/* λίστα με τις ήδη υπάρχουσες κριτικές */}
       <div className="d-flex flex-column gap-3">
         {reviews.length > 0 ? (
           reviews.map((review, index) => {

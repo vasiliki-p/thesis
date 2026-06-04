@@ -14,33 +14,34 @@ export default function GroupSwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matches, setMatches] = useState([]);
   
-  // ΝΕΟ: Βάλαμε loading state για να ξέρουμε πότε τελείωσε το ψάξιμο
   const [loading, setLoading] = useState(true);
 
-  const [showMatchScreen, setShowMatchScreen] = useState(false);
+  const [showMatch, setShowMatch] = useState(false);
   const [latestMatch, setLatestMatch] = useState(null);
 
-  // States για τα Animations
+  
   const [isSkipping, setIsSkipping] = useState(false);
   const [showHeart, setShowHeart] = useState(false);
 
-  // Για το Double Tap & το Swipe
+// μεταβλητές για αναγνώριση swipe και double-tap στα κινητά
   const lastTapTime = useRef(0);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
+  // αντιγραφή PIN
   const copyToClipboard = () => {
     navigator.clipboard.writeText(sessionId);
     toast.success("Ο κωδικός αντιγράφηκε! Στείλτον στην παρέα σου. 📲");
   };
 
+
+  // αρχική φόρτωση και σύνδεση στο socket
   useEffect(() => {
     socket.emit('join_group', sessionId);
     
-    const fetchActivities = async () => {
+    const loadActivities = async () => {
       try {
         const token = localStorage.getItem("token");
-        // ΔΙΟΡΘΩΣΗ 1: Χτυπάμε το σωστό endpoint που καταλαβαίνει από Φίλτρα!
         const res = await axios.get(`/api/group/activities/${sessionId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -52,8 +53,9 @@ export default function GroupSwipePage() {
         setLoading(false);
       }
     };
-    fetchActivities();
-
+    loadActivities();
+    
+    // ακούμε για live matches από άλλους χρήστες
     socket.on('receive_swipe', (data) => {
       if (data.match) {
         setActivities(prev => {
@@ -62,7 +64,7 @@ export default function GroupSwipePage() {
             setMatches(prevMatches => {
               if (prevMatches.find(m => m.id === matchedAct.id)) return prevMatches;
               setLatestMatch(matchedAct);
-              setShowMatchScreen(true);
+              setShowMatch(true);
               return [...prevMatches, matchedAct];
             });
           }
@@ -74,17 +76,17 @@ export default function GroupSwipePage() {
     return () => socket.off('receive_swipe');
   }, [sessionId]);
 
-  // --- ΠΛΟΗΓΗΣΗ ΜΕ ΒΕΛΑΚΙΑ ΠΛΗΚΤΡΟΛΟΓΙΟΥ ---
+  // χειρισμός με βελάκια πληκτρολογίου
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') handleVote('dislike');
-      if (e.key === 'ArrowRight') handleVote('like');
+      if (e.key === 'ArrowLeft') vote('dislike');
+      if (e.key === 'ArrowRight') vote('like');
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentIndex, activities]);
 
-  // --- ΑΣΦΑΛΕΙΑ ΔΕΔΟΜΕΝΩΝ (Fallback) ---
+  // fallbacks σε περίπτωση κενών δεδομένων
   const getSafeImage = (activity) => {
     if (activity && activity.image_url && activity.image_url.trim() !== "") return activity.image_url;
     return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=800"; 
@@ -96,8 +98,7 @@ export default function GroupSwipePage() {
     return "Μυστική Τοποθεσία ✨"; 
   };
 
-  // --- ΛΟΓΙΚΗ ΨΗΦΟΦΟΡΙΑΣ ---
-  const handleVote = async (voteType) => {
+  const vote = async (voteType) => {
     if (currentIndex >= activities.length) return;
     const currentActivity = activities[currentIndex];
     
@@ -108,6 +109,7 @@ export default function GroupSwipePage() {
       return; 
     }
 
+    // ενεργοποίηση  οπτικών εφέ ανάλογα με την ψήφο
     if (voteType === 'like') {
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 800);
@@ -130,7 +132,7 @@ export default function GroupSwipePage() {
       if (res.data.match) {
         socket.emit('send_swipe', { groupId: sessionId, activityId: currentActivity.id, match: true });
         setLatestMatch(currentActivity);
-        setShowMatchScreen(true);
+        setShowMatch(true);
       }
     } catch (err) { console.error("Σφάλμα στην ψήφο:", err); }
 
@@ -140,34 +142,30 @@ export default function GroupSwipePage() {
     }, voteType === 'like' ? 600 : 400); 
   };
 
-  const handleDragStart = (e) => {
+  const startSwipe = (e) => {
     touchStartX.current = e.clientX || (e.touches && e.touches[0].clientX);
   };
 
-  const handleDragEnd = (e) => {
+  const endSwipe = (e) => {
     touchEndX.current = e.clientX || (e.changedTouches && e.changedTouches[0].clientX);
     const swipeDistance = touchStartX.current - touchEndX.current;
     
     if (swipeDistance > 60) {
-      handleVote('dislike'); 
+      vote('dislike'); 
     } else if (swipeDistance < -60) {
-      handleVote('like'); 
+      vote('like'); 
     }
   };
 
-  const handleDoubleTap = () => {
+  const doubleTap = () => {
     const now = Date.now();
     const DOUBLE_PRESS_DELAY = 300;
     if (now - lastTapTime.current < DOUBLE_PRESS_DELAY) {
-      handleVote('like'); 
+      vote('like'); 
     }
     lastTapTime.current = now;
   };
 
-  // -------------------------------------------------------------
-  // ΟΘΟΝΕΣ ΦΟΡΤΩΣΗΣ ΚΑΙ ΕΛΕΓΧΩΝ (ΠΡΙΝ ΦΤΑΣΟΥΜΕ ΣΤΙΣ ΚΑΡΤΕΣ)
-  // -------------------------------------------------------------
-  
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "100vh", background: "var(--bg-color)" }}>
@@ -176,7 +174,7 @@ export default function GroupSwipePage() {
     );
   }
 
-  // ΔΙΟΡΘΩΣΗ 2: Το "Ειλικρινές" Empty State αν δεν υπάρχουν κάρτες για αυτά τα φίλτρα
+  // empty state (δεν υπάρχουν κάρτες για αυτά τα φίλτρα)
   if (!loading && activities.length === 0) {
     return (
       <div className="container d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "100vh", paddingTop: "80px", background: "var(--bg-color)" }}>
@@ -207,7 +205,7 @@ export default function GroupSwipePage() {
       paddingTop: '2px', paddingBottom: '20px', overflow: 'hidden' 
     }}>
       
-      {/* HEADER */}
+      {/* top info & pin */}
       <div className="text-center mb-3">
         <span className="urgency-badge mb-2 d-inline-block shadow-sm" onClick={copyToClipboard} style={{ cursor: 'pointer', padding: '6px 12px', fontSize: '0.75rem' }}>
             Session: #{sessionId} 📋
@@ -222,7 +220,7 @@ export default function GroupSwipePage() {
         </p>
       </div>
       
-      {/* TIKTOK FEED CONTAINER */}
+      {/* swiping area */}
       {currentActivity ? (
         <div className="tiktok-container">
           
@@ -232,16 +230,15 @@ export default function GroupSwipePage() {
               backgroundImage: `url(${getSafeImage(currentActivity)})`,
               cursor: 'grab' 
             }}
-            onClick={handleDoubleTap}
-            onMouseDown={handleDragStart}
-            onMouseUp={handleDragEnd}
-            onTouchStart={handleDragStart}
-            onTouchEnd={handleDragEnd}
+            onClick={doubleTap}
+            onMouseDown={startSwipe}
+            onMouseUp={endSwipe}
+            onTouchStart={startSwipe}
+            onTouchEnd={endSwipe}
           >
-            {/* Overlay Καρδιάς */}
+            {/* animation καρδιάς */}
             <div className={`big-heart-overlay ${showHeart ? 'animate' : ''}`}>🧭</div>
             
-            {/* ΠΛΗΡΟΦΟΡΙΕΣ */}
             <div className="tiktok-info">
               <span className="tag-pill m-0" style={{ background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', padding: '5px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', color: '#ffffff' }}>
                 {currentActivity.category || "Εξερεύνηση"}
@@ -255,17 +252,17 @@ export default function GroupSwipePage() {
               </p>
             </div>
 
-            {/* ΚΟΥΜΠΙΑ */}
+            
             <div className="tiktok-actions">
               <div className="tiktok-btn-wrapper">
-                <button className="tiktok-btn btn-like" onClick={(e) => { e.stopPropagation(); handleVote('like'); }}>
+                <button className="tiktok-btn btn-like" onClick={(e) => { e.stopPropagation(); vote('like'); }}>
                   🧭
                 </button>
                 <span className="tiktok-btn-label">Vibe</span>
               </div>
               
               <div className="tiktok-btn-wrapper">
-                <button className="tiktok-btn btn-skip" onClick={(e) => { e.stopPropagation(); handleVote('dislike'); }}>
+                <button className="tiktok-btn btn-skip" onClick={(e) => { e.stopPropagation(); vote('dislike'); }}>
                   <span style={{ display: 'inline-block', fontSize: '1.2rem' }}>⏩</span>
                 </button>
                 <span className="tiktok-btn-label">Skip</span>
@@ -275,7 +272,7 @@ export default function GroupSwipePage() {
           
         </div>
       ) : (
-       /* ΟΤΑΝ ΤΕΛΕΙΩΣΟΥΝ ΟΙ ΕΠΙΛΟΓΕΣ (Όταν κάνει swipe και την τελευταία κάρτα) */
+        /* οθόνη τερματισμού (no more cards) */
         <div className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ border: '2px dashed var(--accent-color)', borderRadius: '30px', background: 'var(--card-bg)', width: '90%', maxWidth: '420px', height: '60vh' }}>
           <div className="display-1 mb-3">🏆</div>
           <h3 className="fw-bold mb-2" style={{ color: 'var(--text-main)' }}>Τα είδατε όλα!</h3>
@@ -291,8 +288,8 @@ export default function GroupSwipePage() {
         </div>
       )}
 
-      {/* --- MATCH SCREEN OVERLAY --- */}
-      {showMatchScreen && latestMatch && (
+      {/* live match popup */}
+      {showMatch && latestMatch && (
         <div 
           className="match-screen-immersive"
           style={{ 
@@ -364,7 +361,7 @@ export default function GroupSwipePage() {
               </button>
               
               <button 
-                onClick={() => setShowMatchScreen(false)} 
+                onClick={() => setShowMatch(false)} 
                 style={{
                   background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none',
                   padding: '10px', fontSize: '1rem', fontWeight: 600, cursor: 'pointer'

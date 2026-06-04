@@ -7,9 +7,8 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import { GeoAltFill, ArrowRightCircleFill } from "react-bootstrap-icons";
 import PropTypes from "prop-types";
 
-// --- 1. CSS Styles ---
+// custom styles για τον χάρτη και τα εφέ των pins
 const mapStyles = `
-  /* Στυλ για τα Zenly Custom Pins */
   .custom-zenly-pin {
     background: transparent;
     border: none;
@@ -67,7 +66,6 @@ const mapStyles = `
     100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
   }
 
-  /* Cluster & Popup Styles (Τα κράτησα όπως τα είχες) */
   .custom-cluster-icon {
     background-color: var(--accent-color, #0d6efd); 
     color: #000;
@@ -90,7 +88,7 @@ const mapStyles = `
   .leaflet-popup-tip { background: white; }
 `;
 
-// --- 2. DATA HELPERS ---
+// hardcoded συντεταγμένες πόλεων
 const cityCoordinates = {
   "Αθήνα": [37.9838, 23.7275], "Σούνιο": [37.6502, 24.0246], "Πειραιάς": [37.9429, 23.6469], "Πάτρα": [38.2466, 21.7345], "Καλάβρυτα": [38.0376, 22.1111], "Ναύπλιο": [37.5671, 22.8016], "Επίδαυρος": [37.6368, 23.1597], "Νεμέα": [37.817, 22.6599], "Ολυμπία": [37.6403, 21.6247], "Κόρινθος": [37.9386, 22.9324], "Μεσσηνία": [36.9634, 21.6961], "Μάνη": [36.6575, 22.3807], "Μονεμβασιά": [36.6865, 23.056], "Αργολίδα": [37.7289, 22.7533], "Λακωνία": [36.7628, 23.0805], "Αρκαδία": [37.509, 22.3789], "Δελφοί": [38.4795, 22.4965], "Λαμία": [38.896, 22.4351], "Ναύπακτος": [38.3929, 21.8268], "Καλαμπάκα": [39.7042, 21.6269], "Μετέωρα": [39.7217, 21.6306], "Καρδίτσα": [39.3633, 21.9211], "Πήλιο": [39.4389, 23.0489], "Θεσσαλονίκη": [40.6401, 22.9444], "Βεργίνα": [40.4859, 22.3195], "Αριδαία": [40.9702, 22.0583], "Χαλκιδική": [40.3533, 23.4473], "Λιτόχωρο": [40.103, 22.5024], "Ξάνθη": [41.1349, 24.888], "Σέρρες": [41.0921, 23.5413], "Έδεσσα": [40.8016, 22.0439], "Ζαγοροχώρια": [39.8783, 20.7303], "Ιωάννινα": [39.665, 20.8537], "Κέρκυρα": [39.6243, 19.9217], "Ζάκυνθος": [37.7874, 20.8978], "Λευκάδα": [38.8306, 20.7047], "Κεφαλονιά": [38.1764, 20.4889], "Ηράκλειο": [35.3387, 25.1442], "Χανιά": [35.5138, 24.018], "Οία": [36.4618, 25.3753], "Σαντορίνη": [36.3932, 25.4615], "Μήλος": [36.7455, 24.4239], "Ρόδος": [36.4349, 28.2175], "Αμοργός": [36.8322, 25.8998], "Μύκονος": [37.4467, 25.3289], "Νάξος": [37.1039, 25.3764], "Πάρος": [37.0856, 25.1489], "Κως": [36.8917, 27.2877], "Χίος": [38.3678, 26.1358]
 };
@@ -100,6 +98,7 @@ const getImage = (act) => {
   return "https://picsum.photos/240/140";
 };
 
+// ρυθμίσεις χάρτη
 const DEFAULT_CENTER = [38.3, 22];
 const DEFAULT_ZOOM = 6;
 const SINGLE_ITEM_ZOOM = 11;
@@ -107,14 +106,13 @@ const MAX_FIT_ZOOM = 14;
 const LARGE_AREA_LAT_DIFF_THRESHOLD = 2; 
 const FIT_PADDING = [50, 50];
 
+// offsets για να μην πέφτουν τα pins ακριβώς το ένα πάνω στο άλλο
 const OFFSET_LAT_STEP = 0.0004;
 const OFFSET_LAT_BASE = 0.0002;
 const OFFSET_LNG_STEP = 0.0004;
 const OFFSET_LNG_BASE = 0.0002;
 
-// --- 3. ICONS ---
-
-// Το νέο μας Zenly Icon!
+// δημιουργία custom pin με εικόνα
 const createZenlyIcon = (activity) => {
   return new L.DivIcon({
     className: "custom-zenly-pin",
@@ -127,10 +125,11 @@ const createZenlyIcon = (activity) => {
     `,
     iconSize: [60, 60],
     iconAnchor: [30, 45],
-    popupAnchor: [0, -35], // Για να ανοίγει το popup λίγο πιο πάνω
+    popupAnchor: [0, -35], 
   });
 };
 
+// δημιουργία cluster icon
 const createClusterIcon = (cluster) =>
   new L.DivIcon({
     html: `<span>${cluster.getChildCount()}</span>`,
@@ -138,8 +137,7 @@ const createClusterIcon = (cluster) =>
     iconSize: L.point(44, 44, true),
   });
 
-
-// --- 4. CONTROLLER ---
+// component που ελέγχει δυναμικά το κέντρο και το zoom του χάρτη
 function MapController({ activities }) {
   const map = useMap();
 
@@ -194,7 +192,6 @@ MapController.propTypes = {
   ).isRequired,
 };
 
-// --- 5. MAIN COMPONENT ---
 const ActivitiesMap = ({ activities }) => {
   return (
     <MapContainer
@@ -234,12 +231,12 @@ const ActivitiesMap = ({ activities }) => {
 
           if (!position) return null;
 
+          // μαθηματικό offset για να μη στοιβάζονται τα pins
           const offsetLat = (Number(activity.id) % 5) * OFFSET_LAT_STEP - OFFSET_LAT_BASE;
           const offsetLng = (Number(activity.id) % 3) * OFFSET_LNG_STEP - OFFSET_LNG_BASE;
           const finalPos = [position[0] + offsetLat, position[1] + offsetLng];
 
           return (
-            /* Εδώ βάλαμε το νέο createZenlyIcon! */
             <Marker key={activity.id} position={finalPos} icon={createZenlyIcon(activity)}>
               <Popup closeButton={false}>
                 <div style={{ textAlign: "center" }}>

@@ -7,23 +7,22 @@ export default function SurpriseDice() {
   const [isRolling, setIsRolling] = useState(false);
   const navigate = useNavigate();
 
-  const handleRoll = async () => {
-    // Αν ήδη γυρνάει, μην κάνεις τίποτα (για να μην πατάει πολλές φορές ο χρήστης)
+  const rollDice = async () => {
+    // αποτροπή διπλού κλικ όσο γυρνάει το ζάρι
     if (isRolling) return;
     
     setIsRolling(true);
 
     try {
-      // 1. Τραβάμε ΠΡΑΓΜΑΤΙΚΕΣ δραστηριότητες από το API σου
+      // παίρνουμε όλες τις δραστηριότητες
       const response = await axios.get('/api/activities');
       const activities = response.data;
       
       if (activities && activities.length > 0) {
-        // 2. Διαλέγουμε μία στην τύχη
+        // επιλογή μιας τυχαίας δραστηριότητας
         const randomAct = activities[Math.floor(Math.random() * activities.length)];
         
-        // 3. Περιμένουμε 1.5 δευτερόλεπτο για να παίξει το 3D animation του ζαριού 
-        // και μετά κάνουμε redirect στο πραγματικό ID!
+        // περιμένουμε 1.5s για να παίξει το animation του ζαριού πριν την αλλαγή σελίδας
         setTimeout(() => { 
           setIsRolling(false); 
           navigate(`/activities/${randomAct.id}`); 
@@ -41,7 +40,7 @@ export default function SurpriseDice() {
   };
 
   return (
-    <div className="dice-container" onClick={handleRoll} style={{ cursor: 'pointer', margin: 0 }}>
+    <div className="dice-container" onClick={rollDice} style={{ cursor: 'pointer', margin: 0 }}>
       <div className={`dice ${isRolling ? 'rolling' : ''}`}>
         <div className="dice-face front">🎲</div>
         <div className="dice-face back">✨</div>

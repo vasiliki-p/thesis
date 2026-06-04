@@ -1,9 +1,8 @@
-// src/api.js
 import axios from "axios";
 
 const API_URL = "/api";
 
-// ================= AUTH =================
+//auth
 export const registerUser = async (username, email, password) => {
   return axios.post(`${API_URL}/register`, { username, email, password });
 };
@@ -12,14 +11,13 @@ export const loginUser = async (email, password) => {
   return axios.post(`${API_URL}/login`, { email, password });
 };
 
-// ================= AI SUGGESTIONS =================
-// 🔹 search + personalization
+//ai suggestions
 export const getAiSuggestions = async ({ interests = "", budget = null, location = "" }) => {
   const token = localStorage.getItem("token"); // Παίρνουμε το token
   const res = await axios.post(
     `${API_URL}/ai/suggest`, 
-    { interests, budget, location }, // Αφαιρέσαμε το userId!
-    { headers: { Authorization: `Bearer ${token}` } } // Στέλνουμε το token στα headers
+    { interests, budget, location }, 
+    { headers: { Authorization: `Bearer ${token}` } } 
   );
   return res.data;
 };
@@ -29,13 +27,21 @@ export const sendMessageToOfflineAi = async (message) => {
   return res.data;
 };
 
-// ================= ACTIVITIES =================
+
+export const sendMessageToChatbot = async (message) => {
+  const res = await axios.post(`${API_URL}/ai/chatbot`, {
+    message
+  });
+  return res.data;
+};
+
+// activities
 export const getActivities = async () => {
   const res = await axios.get(`${API_URL}/activities`);
   return res.data;
 };
 
-// ================= REVIEWS =================
+// reviews
 export const getAllReviews = async () => {
   const res = await axios.get(`${API_URL}/reviews`);
   return res.data;
@@ -56,7 +62,7 @@ export const addReview = async (activity_id, rating, comment) => {
   return res.data;
 };
 
-// ================= PROFILE =================
+//  προφίλ χρήστη
 export const getProfile = async (token) => {
   const res = await axios.get(`${API_URL}/user/profile`, {
     headers: { Authorization: `Bearer ${token}` }
@@ -71,7 +77,7 @@ export const updateProfile = async (token, data) => {
   return res.data;
 };
 
-// ================= STATS =================
+// στατιστικά
 export const getStats = async (token) => {
   const res = await axios.get(`${API_URL}/user/stats`, {   
     headers: { Authorization: `Bearer ${token}` }
@@ -79,15 +85,7 @@ export const getStats = async (token) => {
   return res.data;
 };  
 
-// ================= CHAT BOT =================
-export const sendMessageToChatbot = async (message) => {
-  const res = await axios.post(`${API_URL}/ai/chatbot`, {
-    message
-  });
-  return res.data;
-};
-
-// ================= HISTORY =================
+// ιστορικό
 export const addToHistory = async (activity_id) => { 
   const token = localStorage.getItem("token");
   if (!token) return;

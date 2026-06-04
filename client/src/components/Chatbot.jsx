@@ -16,36 +16,38 @@ function Chatbot() {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
+  
+  // auto-scroll στο τελευταίο μήνυμα
   useEffect(() => {
     scrollToBottom();
   }, [messages, isOpen]);
 
+  // αποστολή μηνύματος στο backend
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage = input;
+    const text = input;
     setInput("");
 
-    const userMsgObj = {
+    const userMsg = {
       id: `user-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       from: "user",
-      text: userMessage,
+      text: text,
     };
 
-    setMessages((prev) => [...prev, userMsgObj]);
+    setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
 
     try {
-      const res = await sendMessageToChatbot(userMessage);
+      const res = await sendMessageToChatbot(text);
 
-      const aiMsgObj = {
+      const aiMsg = {
         id: `ai-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         from: "ai",
         text: res.reply,
       };
 
-      setMessages((prev) => [...prev, aiMsgObj]);
+      setMessages((prev) => [...prev, aiMsg]);
     } catch (err) {
       console.error("Chatbot request failed:", err);
 
@@ -58,8 +60,8 @@ function Chatbot() {
     }
   };
 
-  // --- Η ΚΑΡΔΙΑ ΤΗΣ ΕΞΥΠΝΗΣ ΛΕΙΤΟΥΡΓΙΑΣ ---
-  const showBubble = (msg) => {
+  // ψάχνει για κρυφά links στο μήνυμα του AI (πχ. {{LINK:/activities/2}}) και φτιάχνει κουμπί
+  const formatMessage = (msg) => {
     const linkMatch = msg.text.match(/{{LINK:(.*?)}}/);
     const cleanText = msg.text.replace(/{{LINK:.*?}}/, "").trim();
     const linkUrl = linkMatch ? linkMatch[1] : null;
@@ -84,6 +86,7 @@ function Chatbot() {
 
   return (
     <>
+      {/* Παράθυρο Chat */}
       {isOpen && (
         <div style={styles.chatWindow}>
           <div style={styles.header}>
@@ -104,7 +107,7 @@ function Chatbot() {
                   color: msg.from === "user" ? "white" : "#212529",
                 }}
               >
-                {showBubble(msg)}
+                {formatMessage(msg)}
               </div>
             ))}
 
@@ -129,6 +132,7 @@ function Chatbot() {
         </div>
       )}
 
+      {/* Κουμπί (Φούσκα) κάτω δεξιά */}
       <button onClick={() => setIsOpen((v) => !v)} style={styles.toggleButton}>
         {isOpen ? "🔽" : "💬"}
       </button>
@@ -136,6 +140,7 @@ function Chatbot() {
   );
 }
 
+// Inline Styles (για γρήγορο styling χωρίς εξωτερικό CSS)
 const styles = {
   toggleButton: {
     position: "fixed",

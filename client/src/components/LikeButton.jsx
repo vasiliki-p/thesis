@@ -8,17 +8,16 @@ export default function LikeButton({ activityId }) {
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // 1. Παίρνουμε το Token αντί για το userId
   const token = localStorage.getItem("token");
 
+  // ελέγχουμε αν το έχει ήδη στα αγαπημένα μόλις φορτώσει
   useEffect(() => {
     if (!token || !activityId) return;
 
     let isMounted = true;
 
-    const checkLikeStatus = async () => {
+    const checkLike = async () => {
       try {
-        // 2. Στο URL στέλνουμε ΜΟΝΟ το activity_id. Το token πάει στα headers!
         const res = await axios.get(
           `/api/favourites/check?activity_id=${activityId}`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -29,14 +28,16 @@ export default function LikeButton({ activityId }) {
       }
     };
 
-    checkLikeStatus();
+    checkLike();
 
+    // cleanup
     return () => {
       isMounted = false;
     };
   }, [activityId, token]);
 
-  const handleToggleLike = async (e) => {
+  // προσθήκη ή αφαίρεση από τα αγαπημένα
+  const toggleLike = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -45,19 +46,18 @@ export default function LikeButton({ activityId }) {
       return;
     }
 
+    // αποτροπή spam clicks
     if (loading) return;
     setLoading(true);
 
     try {
       if (liked) {
-        // 3. Στο DELETE, τα δεδομένα μπαίνουν στο 'data' και το token στο 'headers'
         await axios.delete(`/api/favourites/remove`, {
           headers: { Authorization: `Bearer ${token}` },
           data: { activity_id: activityId },
         });
         setLiked(false);
       } else {
-        // 4. Στο POST, τα δεδομένα είναι το 2ο όρισμα, τα headers το 3ο
         await axios.post(`/api/favourites/add`, 
           { activity_id: activityId },
           { headers: { Authorization: `Bearer ${token}` } }
@@ -74,7 +74,7 @@ export default function LikeButton({ activityId }) {
 
   return (
     <button
-      onClick={handleToggleLike}
+      onClick={toggleLike}
       className="bg-transparent border-0 p-0"
       style={{ 
         color: liked ? "#E63946" : "var(--text-main)", 

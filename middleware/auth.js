@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
 
+// middleware που προστατεύει τα routes, ελέγχοντας αν ο χρήστης είναι συνδεδεμένος
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -9,11 +10,12 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ error: "Δεν παρέχεται token πρόσβασης (Unauthorized)" });
   }
 
+  // επαλήθευση του token
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       return res.status(403).json({ error: "Μη έγκυρο ή ληγμένο token (Forbidden)" });
     }
-    // Αποθηκεύουμε τα στοιχεία του χρήστη στο req.user για να τα βλέπουν τα επόμενα routes
+    // περνάμε τον χρήστη στα επόμενα routes μέσω του req
     req.user = user;
     next();
   });

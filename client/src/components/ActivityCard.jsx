@@ -4,8 +4,8 @@ import PropTypes from "prop-types";
 import { GeoAltFill } from "react-bootstrap-icons";
 import LikeButton from "./LikeButton";
 
-/* ================= SMART IMAGE RULES ================= */
-const SMART_IMAGE_RULES = [
+// λέξεις κλειδιά για να μπαίνουν αυτόματα εικόνες αν λείπουν από τη βάση
+const titleRules = [
   { url: "https://images.unsplash.com/photo-1555993539-1732b0258235?auto=format&fit=crop&w=800&q=80", titleIncludes: ["πλάκα", "ακρόπολη", "παρθενώνας", "αναφιώτικα"] },
   { url: "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?auto=format&fit=crop&w=800&q=80", titleIncludes: ["κήπος", "πικνίκ", "πάρκο", "δασύλλιο"] },
   { url: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80", titleIncludes: ["υμηττός", "πεζοπορία", "βουνό", "όλυμπος"] },
@@ -19,30 +19,31 @@ const SMART_IMAGE_RULES = [
   { url: "https://images.unsplash.com/photo-1566127444979-b3d2b654e3d7?auto=format&fit=crop&w=800&q=80", titleIncludes: ["μουσείο", "αρχαιολογικό"] },
 ];
 
-const CATEGORY_IMAGE_RULES = [
+const categoryRules = [
   { url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["διασκέδαση"] },
   { url: "https://images.unsplash.com/photo-1501854140884-074bf86ee91c?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["φύση"] },
   { url: "https://images.unsplash.com/photo-1599803654935-5b9d1c93578c?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["πολιτισμός"] },
   { url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["γαστρονομία"] },
 ];
 
-const DEFAULT_SMART_IMAGE = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80";
-/* ==================================================== */
+const fallbackImg = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80";
+
 
 export default function ActivityCard({ activity }) {
+  // βρίσκει την καλύτερη εικόνα αν λείπει το link
   const getSmartImage = (act) => {
     const title = act.title?.toLowerCase() ?? "";
     const cat = act.category?.toLowerCase() ?? "";
-    const titleRule = SMART_IMAGE_RULES.find((rule) => rule.titleIncludes.some((k) => title.includes(k)));
+    const titleRule = titleRules.find((rule) => rule.words.some((k) => title.includes(k)));
     if (titleRule) return titleRule.url;
-    const catRule = CATEGORY_IMAGE_RULES.find((rule) => rule.categoryIncludes.some((k) => cat.includes(k)));
+    const catRule = categoryRules.find((rule) => rule.words.some((k) => cat.includes(k)));
     if (catRule) return catRule.url;
-    return DEFAULT_SMART_IMAGE;
+    return fallbackImg;
   };
 
   const hasValidDbImage = activity.image_url && activity.image_url.length > 15;
   const imageSrc = hasValidDbImage ? activity.image_url : getSmartImage(activity);
-  const costLabel = Number(activity.cost) === 0 ? "Δωρεάν" : `${activity.cost}€`;
+  const price = Number(activity.cost) === 0 ? "Δωρεάν" : `${activity.cost}€`;
 
   return (
     <div className="card h-100 border-0 shadow-sm overflow-hidden" 
@@ -51,7 +52,7 @@ export default function ActivityCard({ activity }) {
          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
     >
       
-      {/* IMAGE SECTION */}
+      {/* εικόνα & badges */}
       <div style={{ position: "relative", height: "220px", overflow: "hidden" }}>
         <img
           src={imageSrc}
@@ -62,22 +63,21 @@ export default function ActivityCard({ activity }) {
           onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
         />
         
-        {/* COST BADGE */}
         <div className="position-absolute top-0 start-0 m-3 z-2">
           <span className="badge shadow-sm px-3 py-2 rounded-pill fw-bold" 
                 style={{ background: 'var(--accent-color)', color: '#000', fontSize: "0.75rem", letterSpacing: "-0.02em" }}>
-            {costLabel}
+            {price}
           </span>
         </div>
 
-        {/* LIKE BUTTON OVERLAY */}
+        {/* like button */}
         <div className="position-absolute top-0 end-0 m-3 rounded-circle shadow-sm d-flex justify-content-center align-items-center z-2"
              style={{ width: "42px", height: "42px", background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}>
           <LikeButton activityId={activity.id} />
         </div>
       </div>
 
-      {/* CONTENT SECTION */}
+      {/* κείμενα */}
       <div className="card-body p-4 d-flex flex-column">
         <div className="mb-3">
           <span className="badge rounded-pill px-3 py-2" 
@@ -94,28 +94,7 @@ export default function ActivityCard({ activity }) {
           <GeoAltFill className="me-2" style={{ color: "var(--accent-color)" }} /> {activity.location}
         </p>
 
-        {/* SOCIAL PROOF (AVATARS) */}
-        <div className="d-flex align-items-center mb-4 mt-auto">
-          <div className="d-flex me-2">
-            {[1, 2, 3].map((i, index) => (
-              <img 
-                key={i} 
-                src={`https://i.pravatar.cc/100?img=${i+15}`} 
-                alt="user" 
-                className="rounded-circle shadow-sm"
-                style={{ 
-                  width: "28px", height: "28px", 
-                  border: "2px solid var(--card-bg)", 
-                  objectFit: "cover",
-                  marginLeft: index !== 0 ? "-10px" : "0" // Για να επικαλύπτονται
-                }}
-              />
-            ))}
-          </div>
-          <span className="fw-bold" style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>+12 πάνε</span>
-        </div>
-
-        {/* CTA BUTTON */}
+        {/* mt-auto για να μείνει το κουμπί στο κάτω μέρος */}
         <Link
           to={`/activities/${activity.id}`}
           className="btn w-100 fw-bold rounded-pill"

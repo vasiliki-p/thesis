@@ -9,7 +9,7 @@ const PersonalChoice = () => {
   const [hasProfile, setHasProfile] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
         const token = localStorage.getItem("token");
 
@@ -18,12 +18,12 @@ const PersonalChoice = () => {
             return; 
         }
 
-        const [allActivities, userProfile] = await Promise.all([
+        const [activities, profile] = await Promise.all([
           getActivities(),
           getProfile(token) 
         ]);
 
-        if (!userProfile || (!userProfile.location && !userProfile.interests && !userProfile.budget)) {
+        if (!profile || (!profile.location && !profile.interests && !profile.budget)) {
             setHasProfile(false);
             setLoading(false);
             return;
@@ -31,42 +31,42 @@ const PersonalChoice = () => {
 
         setHasProfile(true);
 
-        const selected = allActivities
+        // αλγόριθμος υπολογισμού σκορ για το κάθε activity
+        const selected = activities
           .map(act => {
             let score = 0;
             
-            // A. Location Match (+40)
-            const userLoc = (userProfile.location || "").toLowerCase().trim();
+            // έλεγχος τοποθεσίας
+            const userLoc = (profile.location || "").toLowerCase().trim();
             if (userLoc && act.location?.toLowerCase().includes(userLoc)) {
               score += 40;
             }
 
-            // B. Interests Match (+40)
-            const userInterests = Array.isArray(userProfile.interests) 
-                ? userProfile.interests.join(' ').toLowerCase() 
-                : (userProfile.interests || "").toLowerCase();
+            // έλεγχος ενδιαφερόντων
+            const userInterests = Array.isArray(profile.interests) 
+                ? profile.interests.join(' ').toLowerCase() 
+                : (profile.interests || "").toLowerCase();
 
             if (userInterests && act.category && userInterests.includes(act.category.toLowerCase())) {
                 score += 40;
             }
 
-            // C. Budget Match (+20)
-            const userBudget = Number(userProfile.budget || 0);
+            // έλεγχος budget
+            const userBudget = Number(profile.budget || 0);
             if (userBudget > 0 && Number(act.cost) <= userBudget) {
                 score += 20;
             }
 
-            // D. Bonus Free (+10)
+            // bonus αν είναι δωρεάν
             if (Number(act.cost) === 0) {
                 score += 10;
             }
             
             return { ...act, score };
           })
-          // ΦΙΛΤΡΟ: Πρέπει πλέον να έχει πιάσει τουλάχιστον 40 (δηλαδή υποχρεωτικά Τοποθεσία ή Ενδιαφέρον)
-          .filter(act => act.score >= 40) 
+          .filter(act => act.score >= 40) // κρατάμε μόνο όσα ταιριάζουν αρκετά
           .sort((a, b) => b.score - a.score) 
-          .slice(0, 4); 
+          .slice(0, 4); // εμφανίζουμε τα 4 καλύτερα
 
         setChoices(selected);
 
@@ -77,7 +77,7 @@ const PersonalChoice = () => {
       }
     };
 
-    fetchData();
+    loadData();
   }, []);
 
   if (loading) return null; 
