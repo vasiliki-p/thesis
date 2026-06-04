@@ -34,9 +34,9 @@ export default function ActivityCard({ activity }) {
   const getSmartImage = (act) => {
     const title = act.title?.toLowerCase() ?? "";
     const cat = act.category?.toLowerCase() ?? "";
-    const titleRule = titleRules.find((rule) => rule.words.some((k) => title.includes(k)));
+    const titleRule = titleRules.find((rule) => rule.titleIncludes.some((k) => title.includes(k)));
     if (titleRule) return titleRule.url;
-    const catRule = categoryRules.find((rule) => rule.words.some((k) => cat.includes(k)));
+    const catRule = categoryRules.find((rule) => rule.categoryIncludes.some((k) => cat.includes(k)));
     if (catRule) return catRule.url;
     return fallbackImg;
   };
