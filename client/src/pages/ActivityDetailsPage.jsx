@@ -237,7 +237,8 @@ export default function ActivityDetailsPage() {
                   <Map key={activity.id} activities={[activity]} />
                 </div>
                 <a
-                  href={`http://googleusercontent.com/maps.google.com/?q=${encodeURIComponent(activity.location || "Αθήνα")}`}
+                  href={`
+                    https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.location || "Αθήνα")}`}
                   target="_blank"
                   rel="noreferrer"
                   className="d-flex align-items-center justify-content-center transition-btn fw-bold py-3 rounded-pill shadow-sm"

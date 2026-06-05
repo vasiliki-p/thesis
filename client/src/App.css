@@ -1,8 +1,6 @@
-/* ==========================================================================
-   ΒΑΣΙΚΑ STYLES & DYNAMIC THEMES
-   ========================================================================== */
+/*ΒΑΣΙΚΑ STYLES & DYNAMIC THEMES*/
 
-/* --- 1. Πρωινό Θέμα (Default) --- */
+/*  1. Πρωινό Θέμα (Default)  */
 :root,
 body[data-theme="morning"] {
   --bg-color: linear-gradient(135deg, #FCFBFA 0%, #F5EAD4 50%, #CFB53B 100%);
@@ -18,7 +16,7 @@ body[data-theme="morning"] {
   --blob-color-3: rgba(230, 57, 70, 0.4);
 }
 
-/* --- 2. Απογευματινό Θέμα --- */
+/*  2. Απογευματινό Θέμα  */
 body[data-theme="afternoon"] {
   --bg-color: #FCF9F2;            
   --card-bg: rgba(255, 255, 255, 0.8); 
@@ -30,7 +28,7 @@ body[data-theme="afternoon"] {
   --inverted-text: #FFFFFF;
 }
 
-/* --- 3. Βραδινό / Dark Mode Θέμα --- */
+/*  3. Βραδινό / Dark Mode Θέμα  */
 body[data-theme="night"] {
   --bg-color: #09090B;            
   --card-bg: rgba(255, 255, 255, 0.03); 
@@ -41,11 +39,6 @@ body[data-theme="night"] {
   --card-border: rgba(255, 255, 255, 0.05);
   --inverted-text: #070D14;
 }
-
-
-/* ==========================================================================
-   BASE & RESET
-   ========================================================================== */
 
 /* Ενιαίο Έγχρωμο Φόντο Παντού */
 body {
@@ -82,9 +75,7 @@ p, .card-text {
 }
 
 
-/* ==========================================================================
-   BUTTONS & CONTROLS
-   ========================================================================== */
+/* BUTTONS & CONTROLS*/
 
 .btn {
   border-radius: 100px !important;
@@ -98,7 +89,7 @@ p, .card-text {
 /* Κύρια κουμπιά */
 .btn-primary, .btn-dark {
   background: var(--text-main) !important; 
-  color: var(--bg-color) !important;
+  color: var(--inverted-text) !important;
   border: none !important;
 }
 
@@ -153,7 +144,7 @@ p, .card-text {
   width: 64px;
   height: 64px;
   background: var(--text-main) !important;
-  color: var(--bg-color) !important;
+  color: var(--inverted-text) !important;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -172,9 +163,7 @@ p, .card-text {
 }
 
 
-/* ==========================================================================
-   CARDS & BENTO UI
-   ========================================================================== */
+/*CARDS & BENTO UI*/
 
 /* Βασική Κάρτα */
 .card {
@@ -210,9 +199,7 @@ p, .card-text {
 }
 
 
-/* ==========================================================================
-   COMPONENTS (Lobby, Chat, Badges, Footer)
-   ========================================================================== */
+/* COMPONENTS (Lobby, Chat, Badges, Footer) */
 
 /* 🤝 The Lobby Bento */
 .lobby-card {
@@ -292,7 +279,7 @@ p, .card-text {
 
 .mood-pill:hover {
   background: var(--text-main) !important;
-  color: var(--bg-color) !important;
+  color: var(--inverted-text) !important;
   transform: translateY(-3px);
   box-shadow: 0 10px 20px var(--shadow-color) !important;
 }
@@ -364,11 +351,6 @@ footer {
   font-size: 0.85rem;
   color: var(--text-muted) !important;
 }
-
-
-/* ==========================================================================
-   SQUAD SYNC - IMMERSIVE (TIKTOK / VISION OS STYLE)
-   ========================================================================== */
 
 /* Swipe Container */
 .swipe-container {
@@ -605,9 +587,7 @@ footer {
 }
 
 
-/* ==========================================================================
-   RADAR & LIVE CARDS
-   ========================================================================== */
+/*RADAR & LIVE CARDS*/
 
 .radar-container {
   position: relative;
@@ -674,9 +654,7 @@ footer {
 }
 
 
-/* ==========================================================================
-   SURPRISE ME - 3D GLASS DICE 🎲
-   ========================================================================== */
+/*SURPRISE ME - 3D GLASS DICE */
 
 .surprise-section {
   padding: 40px 20px;
@@ -748,9 +726,7 @@ footer {
 .dice-face.bottom { transform: rotateX(-90deg) translateZ(40px); }
 
 
-/* ==========================================================================
-   ACTIVITIES PAGE - PREMIUM CARDS 🌟
-   ========================================================================== */
+/*ACTIVITIES PAGE - PREMIUM CARDS*/
 
 .activity-card-premium {
   background: var(--card-bg);
@@ -821,9 +797,7 @@ footer {
 }
 
 
-/* ==========================================================================
-   ZENLY MAP PINS (Custom Leaflet Markers) 📍
-   ========================================================================== */
+/*ZENLY MAP PINS (Custom Leaflet Markers) 📍*/
 
 .custom-zenly-pin {
   background: transparent;
@@ -885,9 +859,7 @@ footer {
 }
 
 
-/* ==========================================================================
-   THE LIQUID BACKGROUND
-   ========================================================================== */
+/* THE LIQUID BACKGROUND*/
 
 .liquid-bg-container {
   position: fixed;
@@ -931,9 +903,9 @@ footer {
 }
 
 
-/* ==========================================================================
+/* 
    GLOBAL KEYFRAMES & ANIMATIONS
-   ========================================================================== */
+    */
 
 @keyframes slideUpInfo {
   from { transform: translateY(30px); opacity: 0; }
