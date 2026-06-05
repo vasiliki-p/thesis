@@ -1,10 +1,8 @@
-/* ==========================================================================
-   ΒΑΣΙΚΑ STYLES & DYNAMIC THEMES
-   ========================================================================== */
+/* Βασικά Styles & Dynamic Themes */
+
 
 /* --- 1. Πρωινό Θέμα (Default) --- */
-:root,
-body[data-theme="morning"] {
+body[data-theme="morning"], :root {
   --bg-color: linear-gradient(135deg, #FCFBFA 0%, #F5EAD4 50%, #CFB53B 100%);
   --inverted-text: #F8F9FA;
   --card-bg: rgba(255, 255, 255, 0.85); 
@@ -13,9 +11,6 @@ body[data-theme="morning"] {
   --accent-color: #D4AF37;        
   --shadow-color: rgba(230, 57, 70, 0.25); 
   --card-border: rgba(212, 175, 55, 0.5); 
-  /* Fallbacks για τα liquid blobs σε περίπτωση που δεν οριστούν αλλού */
-  --blob-color-2: rgba(212, 175, 55, 0.6);
-  --blob-color-3: rgba(230, 57, 70, 0.4);
 }
 
 /* --- 2. Απογευματινό Θέμα --- */
@@ -42,12 +37,7 @@ body[data-theme="night"] {
   --inverted-text: #070D14;
 }
 
-
-/* ==========================================================================
-   BASE & RESET
-   ========================================================================== */
-
-/* Ενιαίο Έγχρωμο Φόντο Παντού */
+/* ΕΝΙΑΙΟ ΕΓΧΡΩΜΟ ΦΟΝΤΟ ΠΑΝΤΟΥ */
 body {
   background: var(--bg-color) !important;
   transition: background 0.8s ease-in-out, color 0.8s ease-in-out;
@@ -58,34 +48,7 @@ body {
   margin: 0;
 }
 
-/* Το απόλυτο fix για το Chrome Autofill */
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
-input:-webkit-autofill:active {
-  transition: background-color 5000s ease-in-out 0s !important;
-  -webkit-text-fill-color: var(--text-main) !important;
-  caret-color: var(--text-main) !important;
-}
-
-/* 🖋️ Typography */
-h1, h2, h3, .display-5 {
-  color: var(--text-main) !important;
-  font-weight: 800 !important;
-  letter-spacing: -0.05em !important;
-}
-
-p, .card-text {
-  color: var(--text-muted) !important;
-  line-height: 1.6;
-  font-weight: 500 !important;
-}
-
-
-/* ==========================================================================
-   BUTTONS & CONTROLS
-   ========================================================================== */
-
+/* ΚΟΥΜΠΙΑ */
 .btn {
   border-radius: 100px !important;
   font-weight: 600 !important;
@@ -124,59 +87,28 @@ p, .card-text {
 
 /* Η "Κόκκινη Βελόνα" της Πυξίδας - Κουμπί Αποσύνδεσης  */
 .logout-btn {
-  background: transparent !important;       
-  color: #E63946 !important;                
-  border: 2px solid #E63946 !important;     
-  border-radius: 100px !important;
-  padding: 8px 22px !important;
-  font-weight: 700 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 8px !important;
-  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
-  cursor: pointer;
+    background: transparent !important;       
+    color: #E63946 !important;                
+    border: 2px solid #E63946 !important;     
+    border-radius: 100px !important;
+    padding: 8px 22px !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    cursor: pointer;
 }
 
+/* Όταν περνάς το ποντίκι από πάνω, "γεμίζει" και ανάβει! */
 .logout-btn:hover {
-  background: #E63946 !important;
-  color: #FFFFFF !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4) !important;
+    background: #E63946 !important;
+    color: #FFFFFF !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 20px rgba(230, 57, 70, 0.4) !important;
 }
-
-/* Chatbot Button */
-.chat-trigger {
-  position: fixed;
-  bottom: 40px;
-  right: 40px;
-  width: 64px;
-  height: 64px;
-  background: var(--text-main) !important;
-  color: var(--bg-color) !important;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  cursor: pointer;
-  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1) !important;
-  border: 1px solid var(--card-border) !important;
-}
-
-.chat-trigger:hover {
-  transform: scale(1.15) rotate(-8deg);
-  background: var(--accent-color) !important; 
-  box-shadow: 0 20px 40px var(--shadow-color) !important;
-  color: #000 !important;
-}
-
-
-/* ==========================================================================
-   CARDS & BENTO UI
-   ========================================================================== */
-
-/* Βασική Κάρτα */
+/* ΚΑΡΤΕΣ BENTO/UI */
 .card {
   background: var(--card-bg) !important;
   backdrop-filter: blur(16px) saturate(160%) !important;
@@ -192,131 +124,31 @@ p, .card-text {
   border-color: var(--accent-color) !important;
 }
 
-/* The Glass Cards (Bento) */
-.bento-card {
-  background: var(--card-bg) !important;
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  border: 1px solid var(--card-border) !important;
-  box-shadow: 0 8px 32px 0 var(--shadow-color) !important;
-  border-radius: 40px;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
-  overflow: hidden;
+
+/* 🖋️ TYPOGRAPHY */
+h1, h2, h3, .display-5 {
+  color: var(--text-main) !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.05em !important;
 }
 
-.bento-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px var(--shadow-color) !important;
+p, .card-text {
+  color: var(--text-muted) !important;
+  line-height: 1.6;
+  font-weight: 500 !important;
 }
 
-
-/* ==========================================================================
-   COMPONENTS (Lobby, Chat, Badges, Footer)
-   ========================================================================== */
-
-/* 🤝 The Lobby Bento */
+/* 🤝 THE LOBBY BENTO */
 .lobby-card {
   background: var(--accent-color) !important;
   color: #000 !important;
   border: none !important;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .lobby-card h4, .lobby-card p {
   color: #000 !important;
 }
 
-.lobby-card::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.lobby-card:hover {
-  transform: scale(1.02) !important;
-  box-shadow: 0 40px 80px var(--shadow-color) !important;
-}
-
-/* Chat UI Elements */
-.chat-bubble-me {
-  background: var(--accent-color) !important;
-  color: #000 !important;
-  border-radius: 20px 20px 4px 20px !important;
-}
-
-.chat-bubble-other {
-  background: var(--card-bg) !important;
-  color: var(--text-main) !important;
-  border: 1px solid var(--card-border);
-  border-radius: 20px 20px 20px 4px !important;
-}
-
-/* Social Avatars */
-.avatar-group {
-  display: flex;
-  align-items: center;
-}
-
-.avatar-group div, .avatar-group img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid var(--bg-color); 
-  margin-left: -12px;
-  transition: all 0.3s ease;
-  object-fit: cover;
-  background: var(--text-muted);
-}
-
-.avatar-group div:first-child { margin-left: 0; }
-.avatar-group div:hover { transform: translateY(-5px); z-index: 10; }
-
-/* Mood Filters (Pills) */
-.mood-pill {
-  background: var(--card-bg) !important;
-  border: 1px solid var(--card-border) !important;
-  color: var(--text-main) !important;
-  padding: 12px 24px !important;
-  font-weight: 600 !important;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  font-size: 0.9rem;
-  border-radius: 30px;
-}
-
-.mood-pill:hover {
-  background: var(--text-main) !important;
-  color: var(--bg-color) !important;
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px var(--shadow-color) !important;
-}
-
-.mood-pill.active {
-  background: var(--accent-color) !important;
-  color: #000 !important;
-  border-color: transparent !important;
-}
-
-/* Urgency Elements */
-.urgency-badge {
-  background: #ff3b30 !important;
-  color: white !important;
-  font-weight: 800 !important;
-  font-size: 0.7rem !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 6px 12px !important;
-  border-radius: 100px !important;
-  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3) !important;
-}
-
-/* Footer */
 footer {
   background: transparent !important;
   border-top: 1px solid var(--card-border) !important;
@@ -365,12 +197,130 @@ footer {
   color: var(--text-muted) !important;
 }
 
+/* App.css - SOCIAL AVATARS */
+.avatar-group {
+  display: flex;
+  align-items: center;
+}
+
+.avatar-group div, .avatar-group img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-color); 
+  margin-left: -12px;
+  transition: all 0.3s ease;
+  object-fit: cover;
+  background: var(--text-muted);
+}
+
+.avatar-group div:first-child { margin-left: 0; }
+.avatar-group div:hover { transform: translateY(-5px); z-index: 10; }
+
+/* App.css - MOOD FILTERS */
+.mood-pill {
+  background: var(--card-bg) !important;
+  border: 1px solid var(--card-border) !important;
+  color: var(--text-main) !important;
+  padding: 12px 24px !important;
+  font-weight: 600 !important;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  font-size: 0.9rem;
+  border-radius: 30px;
+}
+
+.mood-pill:hover {
+  background: var(--text-main) !important;
+  color: var(--bg-color) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px var(--shadow-color) !important;
+}
+
+.mood-pill.active {
+  background: var(--accent-color) !important;
+  color: #000 !important;
+  border-color: transparent !important;
+}
+
+/* App.css - URGENCY ELEMENTS */
+.urgency-badge {
+  background: #ff3b30 !important; /* Παραμένει κόκκινο γιατί είναι "Επείγον" */
+  color: white !important;
+  font-weight: 800 !important;
+  font-size: 0.7rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 12px !important;
+  border-radius: 100px !important;
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.3) !important;
+}
+
+/* App.css - CHATBOT BUTTON */
+.chat-trigger {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 64px;
+  height: 64px;
+  background: var(--text-main) !important;
+  color: var(--bg-color) !important;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1) !important;
+  border: 1px solid var(--card-border) !important;
+}
+
+.chat-trigger:hover {
+  transform: scale(1.15) rotate(-8deg);
+  background: var(--accent-color) !important; 
+  box-shadow: 0 20px 40px var(--shadow-color) !important;
+  color: #000 !important;
+}
+
+.lobby-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.lobby-card::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.lobby-card:hover {
+  transform: scale(1.02) !important;
+  box-shadow: 0 40px 80px var(--shadow-color) !important;
+}
+
+/* App.css - CHAT UI ELEMENTS */
+.chat-bubble-me {
+  background: var(--accent-color) !important;
+  color: #000 !important;
+  border-radius: 20px 20px 4px 20px !important;
+}
+
+.chat-bubble-other {
+  background: var(--card-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--card-border);
+  border-radius: 20px 20px 20px 4px !important;
+}
 
 /* ==========================================================================
    SQUAD SYNC - IMMERSIVE (TIKTOK / VISION OS STYLE)
    ========================================================================== */
 
-/* Swipe Container */
 .swipe-container {
   position: relative;
   width: 95%;
@@ -485,14 +435,16 @@ footer {
   box-shadow: 0 10px 20px rgba(23, 224, 160, 0.2);
 }
 
-/* Tiktok Container */
 .tiktok-container {
   position: relative;
-  width: 95%; 
+  width: 95%; /* 95% για να αφήνει περιθώριο στα πλάγια στα κινητά */
   max-width: 400px; 
+  
+  /* ΕΔΩ ΕΙΝΑΙ ΤΟ ΜΥΣΤΙΚΟ: Προσαρμόζεται στο ύψος της οθόνης σου! */
   height: calc(100vh - 220px); 
   max-height: 750px;
   min-height: 400px;
+  
   margin: 0 auto;
   border-radius: 30px;
   overflow: hidden;
@@ -578,9 +530,13 @@ footer {
 .tiktok-btn-wrapper {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
 }
-
 .tiktok-btn-label {
   color: white; font-size: 0.75rem; font-weight: bold; text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+}
+
+@keyframes slideUpInfo {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .slide-up-out {
@@ -604,11 +560,14 @@ footer {
   animation: popHeart 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+@keyframes popHeart {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
 
-/* ==========================================================================
-   RADAR & LIVE CARDS
-   ========================================================================== */
-
+/* Ο κύκλος του Ραντάρ */
 .radar-container {
   position: relative;
   width: 120px;
@@ -624,16 +583,19 @@ footer {
   overflow: hidden;
 }
 
+/* Η ακτίνα που γυρνάει (Scanner) */
 .radar-scanner {
   position: absolute;
   top: 0; left: 0;
   width: 100%; height: 100%;
   border-radius: 50%;
+  /* Το conic-gradient φτιάχνει την ακτίνα που σβήνει σταδιακά */
   background: conic-gradient(from 0deg, transparent 70%, rgba(255, 255, 255, 0.1) 90%, var(--accent-color) 100%);
   animation: radarSpin 2s linear infinite;
   transform-origin: center;
 }
 
+/* Το σημαδάκι στο κέντρο του ραντάρ */
 .radar-core {
   position: relative;
   width: 15px; height: 15px;
@@ -663,21 +625,37 @@ footer {
   box-shadow: 0 15px 30px var(--shadow-color);
 }
 
+/* Κουκκίδα "LIVE" που αναβοσβήνει */
 .live-indicator {
   display: inline-block;
   width: 10px; height: 10px;
   border-radius: 50%;
-  background: #FF3B30; 
+  background: #FF3B30; /* Apple Red για το Live */
   margin-right: 8px;
   box-shadow: 0 0 8px #FF3B30;
   animation: flashLive 1.5s infinite;
 }
 
+/* Animations */
+@keyframes radarSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes corePulse {
+  from { transform: scale(1); box-shadow: 0 0 10px var(--accent-color); }
+  to { transform: scale(1.5); box-shadow: 0 0 25px var(--accent-color); }
+}
+
+@keyframes flashLive {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
 
 /* ==========================================================================
    SURPRISE ME - 3D GLASS DICE 🎲
    ========================================================================== */
-
 .surprise-section {
   padding: 40px 20px;
   display: flex;
@@ -712,13 +690,14 @@ footer {
   position: relative;
   transform-style: preserve-3d;
   transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform: rotateX(-20deg) rotateY(-20deg); 
+  transform: rotateX(-20deg) rotateY(-20deg); /* Αρχική 3D κλίση */
 }
 
 .dice:hover {
   transform: rotateX(-20deg) rotateY(-20deg) scale(1.1);
 }
 
+/* Όταν πατιέται το ζάρι (Rolling State) */
 .dice.rolling {
   animation: rollDice 1s linear infinite;
 }
@@ -740,6 +719,7 @@ footer {
   opacity: 0.9;
 }
 
+/* Στήσιμο των 6 πλευρών του Κύβου στο 3D χώρο */
 .dice-face.front  { transform: rotateY(0deg) translateZ(40px); }
 .dice-face.back   { transform: rotateY(180deg) translateZ(40px); }
 .dice-face.right  { transform: rotateY(90deg) translateZ(40px); }
@@ -747,11 +727,14 @@ footer {
 .dice-face.top    { transform: rotateX(90deg) translateZ(40px); }
 .dice-face.bottom { transform: rotateX(-90deg) translateZ(40px); }
 
-
+/* Το Animation του γυρίσματος */
+@keyframes rollDice {
+  0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+  100% { transform: rotateX(720deg) rotateY(1080deg) rotateZ(360deg); } /* 2-3 πλήρεις περιστροφές */
+}
 /* ==========================================================================
    ACTIVITIES PAGE - PREMIUM CARDS 🌟
    ========================================================================== */
-
 .activity-card-premium {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -767,6 +750,7 @@ footer {
   color: var(--inverted-text) !important;
 }
 
+/* Τι γίνεται όταν πάει το ποντίκι πάνω στην κάρτα */
 .activity-card-premium:hover {
   transform: translateY(-10px);
   box-shadow: 0 20px 40px var(--shadow-color);
@@ -784,19 +768,22 @@ footer {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.6s ease;
+  transition: transform 0.6s ease; /* Ομαλό ζουμ */
 }
 
+/* Cinematic Zoom της εικόνας στο hover */
 .activity-card-premium:hover .activity-img-wrapper img {
   transform: scale(1.08); 
 }
 
+/* Σκούρο gradient πάνω στη φωτό για να διαβάζεται αν βάλουμε κείμενο */
 .activity-img-overlay {
   position: absolute;
   bottom: 0; left: 0; width: 100%; height: 50%;
   background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
 }
 
+/* Το γυάλινο ταμπελάκι της Κατηγορίας */
 .activity-badge {
   position: absolute;
   top: 15px;
@@ -820,11 +807,9 @@ footer {
   flex-direction: column;
 }
 
-
 /* ==========================================================================
    ZENLY MAP PINS (Custom Leaflet Markers) 📍
    ========================================================================== */
-
 .custom-zenly-pin {
   background: transparent;
   border: none;
@@ -844,18 +829,20 @@ footer {
   z-index: 1000 !important; 
 }
 
+/* Η στρογγυλή εικόνα του Pin */
 .pin-avatar {
   width: 45px !important; 
   height: 45px !important; 
-  aspect-ratio: 1 / 1 !important; 
-  border-radius: 50% !important;  
+  aspect-ratio: 1 / 1 !important; /* Κλειδώνει την αναλογία για να είναι ΠΑΝΤΑ τέλειος κύκλος */
+  border-radius: 50% !important;  /* Κάνει τις γωνίες πλήρως στρογγυλές */
   border: 3px solid var(--accent-color); 
   box-shadow: 0 0 15px var(--shadow-color);
-  object-fit: cover !important;   
+  object-fit: cover !important;   /* Κόβει όμορφα την εικόνα χωρίς να την ξεχειλώνει */
   z-index: 2;
   background: var(--card-bg);
 }
 
+/* Το μαύρο ταμπελάκι με το όνομα κάτω από τη φωτό */
 .pin-label {
   background: rgba(0, 0, 0, 0.8); 
   backdrop-filter: blur(5px);
@@ -864,12 +851,13 @@ footer {
   border-radius: 12px; 
   font-size: 0.75rem;
   font-weight: 700; 
-  margin-top: -8px; 
+  margin-top: -8px; /* Ανεβαίνει λίγο για να "πατάει" πάνω στην εικόνα */
   border: 1px solid rgba(255,255,255,0.1);
   white-space: nowrap;
   z-index: 3;
 }
 
+/* Το εφέ που πάλλεται γύρω από το Pin */
 .pin-ripple {
   position: absolute; 
   top: 15px; 
@@ -884,26 +872,29 @@ footer {
   animation: map-ripple 2s infinite cubic-bezier(0.19, 1, 0.22, 1);
 }
 
+@keyframes map-ripple {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+}
 
-/* ==========================================================================
-   THE LIQUID BACKGROUND
-   ========================================================================== */
 
+/* --- 1. THE LIQUID BACKGROUND --- */
 .liquid-bg-container {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;  
-  height: 100%; 
+  width: 100%;  /* <--- ΑΛΛΑΓΗ: Από 100vw σε 100% */
+  height: 100%; /* <--- ΑΛΛΑΓΗ: Από 100vh σε 100% */
   z-index: -1; 
   overflow: hidden;
   background: var(--bg-color); 
   transition: background 0.8s ease;
 }
 
+/* Οι "σταγόνες" του υγρού */
 .liquid-blob {
   position: absolute;
-  filter: blur(80px); 
+  filter: blur(80px); /* Τεράστιο blur για να μοιάζει με ρευστό φως */
   z-index: -1;
   opacity: 0.8;
   animation: liquidMotion 15s infinite alternate ease-in-out;
@@ -911,71 +902,54 @@ footer {
 
 .blob-1 {
   width: 50vw; height: 50vw;
-  background: var(--accent-color); 
+  background: var(--accent-color); /* Παίρνει το χρώμα του theme σου */
   top: -10%; left: -10%;
   animation-delay: 0s;
 }
 
 .blob-2 {
   width: 40vw; height: 40vw;
-  background: var(--blob-color-2); 
+  background: var(--blob-color-2); /* Δεύτερο χρώμα για ανάμιξη */
   bottom: -20%; right: -10%;
   animation-delay: -5s;
 }
 
 .blob-3 {
   width: 45vw; height: 45vw;
-  background: var(--blob-color-3); 
+  background: var(--blob-color-3); /* Τρίτο χρώμα */
   top: 40%; left: 30%;
   animation-delay: -10s;
 }
-
-
-/* ==========================================================================
-   GLOBAL KEYFRAMES & ANIMATIONS
-   ========================================================================== */
-
-@keyframes slideUpInfo {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+/* Το απόλυτο fix για το Chrome Autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    caret-color: var(--text-main) !important;
 }
-
-@keyframes popHeart {
-  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
-  20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-  80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-}
-
-@keyframes radarSpin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes corePulse {
-  from { transform: scale(1); box-shadow: 0 0 10px var(--accent-color); }
-  to { transform: scale(1.5); box-shadow: 0 0 25px var(--accent-color); }
-}
-
-@keyframes flashLive {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-@keyframes rollDice {
-  0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-  100% { transform: rotateX(720deg) rotateY(1080deg) rotateZ(360deg); } 
-}
-
-@keyframes map-ripple {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
-}
-
+/* Η κίνηση του υγρού (μορφοποιείται και αλλάζει θέση) */
 @keyframes liquidMotion {
   0% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; }
   33% { transform: translate(10vw, -10vh) scale(1.1) rotate(10deg); border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
   66% { transform: translate(-5vw, 15vh) scale(0.9) rotate(-5deg); border-radius: 40% 60% 50% 50% / 50% 60% 40% 60%; }
   100% { transform: translate(0, 0) scale(1) rotate(0deg); border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%; }
 }
+
+/* --- 2. THE GLASS CARDS (Bento) --- */
+.bento-card {
+  /* Η μαγεία του γυαλιού: */
+  background: var(--card-bg) !important;
+  backdrop-filter: blur(24px) saturate(150%); /* Θολώνει και ενισχύει τα χρώματα που περνάνε από πίσω */
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid var(--card-border) !important;
+  box-shadow: 0 8px 32px 0 var(--shadow-color) !important;
+          border-radius: 40px;
+          transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+          overflow: hidden;
+        }
+        .bento-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 40px var(--shadow-color) !important;
+        }
