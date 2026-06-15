@@ -163,28 +163,47 @@ useEffect(() => {
 
 
         {/* μηνύματα */}
-      <div ref={chatContainerRef} className="flex-grow-1 p-4 d-flex flex-column gap-3" style={{ background: "rgba(0,0,0,0.01)", overflowY: "auto" }}>
-          {messages.map((msg, index) => {
-            const isMe = msg.user === displayName; 
-            return (
-              <div key={msg.id || index} className={`d-flex flex-column ${isMe ? "align-items-end" : "align-items-start"}`}>
-                <small className="mb-1 fw-bold px-2" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{msg.user}</small>
-                <div className="p-3 shadow-sm" style={{ maxWidth: "70%", fontSize: "0.95rem", fontWeight: "500", lineHeight: "1.5", background: isMe ? '#d97706' : 'var(--bg-color)', color: isMe ? '#fff' : 'var(--text-main)', borderRadius: isMe ? '20px 20px 4px 20px' : '20px 20px 20px 4px', border: isMe ? 'none' : '1px solid var(--card-border)' }}>
-                  {msg.text}
-                  <div className="text-end mt-1" style={{ fontSize: "0.65rem", opacity: 0.7, color: isMe ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)' }}>{msg.time}</div>
-                </div>
-              </div>
-            );
-          })}
+<div ref={chatContainerRef} className="flex-grow-1 p-4 d-flex flex-column gap-3" style={{ background: "rgba(0,0,0,0.02)", overflowY: "auto" }}>
+  {messages.map((msg, index) => {
+    const isMe = msg.user === displayName; 
+    return (
+      <div key={msg.id || index} className={`d-flex flex-column ${isMe ? "align-items-end" : "align-items-start"}`}>
+        <small className="mb-1 fw-bold px-2" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{msg.user}</small>
+        
+        {/* ΔΙΟΡΘΩΣΗ: Χρήση σταθερών Bootstrap κλάσεων (bg-primary / bg-light) για να μη χάνονται τα χρώματα */}
+        <div className={`p-3 shadow-sm ${isMe ? 'bg-primary text-white' : 'bg-light text-dark border'}`} 
+             style={{ maxWidth: "70%", fontSize: "0.95rem", fontWeight: "500", lineHeight: "1.5", borderRadius: isMe ? '20px 20px 4px 20px' : '20px 20px 20px 4px' }}>
+          {msg.text}
+          <div className="text-end mt-1" style={{ fontSize: "0.65rem", opacity: 0.8, color: isMe ? '#fff' : '#6c757d' }}>{msg.time}</div>
         </div>
+      </div>
+    );
+  })}
+</div>
 
         {/* input αποστολής */}
-        <div className="p-4" style={{ borderTop: '1px solid var(--card-border)' }}>
-          <div className="d-flex gap-3 align-items-center p-2" style={{ background: 'var(--bg-color)', border: '1px solid var(--card-border)', borderRadius: "100px" }}>
-            <input type="text" className="form-control border-0 bg-transparent px-3" placeholder="Γράψτε ένα μήνυμα..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} style={{ boxShadow: "none", fontWeight: "500", color: 'var(--text-main)' }} />
-            <button className="btn d-flex align-items-center justify-content-center transition-btn" style={{ width: "44px", height: "44px", minWidth: "44px", background: '#d97706', color: '#fff', borderRadius: '50%', border: 'none' }} onClick={sendMessage}><SendFill size={16} /></button>
-          </div>
-        </div>
+<div className="p-4" style={{ borderTop: '1px solid var(--card-border)' }}>
+  <div className="d-flex gap-3 align-items-center p-2 bg-light border rounded-pill">
+    <input 
+      type="text" 
+      className="form-control border-0 bg-transparent px-3 text-dark" 
+      placeholder="Γράψτε ένα μήνυμα..." 
+      value={input} 
+      onChange={(e) => setInput(e.target.value)} 
+      onKeyDown={(e) => e.key === "Enter" && sendMessage()} 
+      style={{ boxShadow: "none", fontWeight: "500" }} 
+    />
+    {/* Σταθερό btn-primary για το κουμπί αποστολής */}
+    <button 
+      className="btn btn-primary d-flex align-items-center justify-content-center transition-btn rounded-circle" 
+      style={{ width: "44px", height: "44px", minWidth: "44px", border: 'none' }} 
+      onClick={sendMessage}
+    >
+      <SendFill size={16} />
+    </button>
+  </div>
+</div>
+       
       </div>
     </div>
   );

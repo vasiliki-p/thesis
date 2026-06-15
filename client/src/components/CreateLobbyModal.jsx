@@ -65,17 +65,26 @@ export default function CreateLobbyModal({ show, onClose }) {
             <label className="form-label small fw-bold mb-2" style={{ color: 'var(--text-muted)' }}>ΟΝΟΜΑ ΠΑΡΕΑΣ</label>
             <input type="text" required className="form-control border-0" placeholder="π.χ. Nightout στο Κέντρο 🍻" value={newLobby.name} onChange={(e) => setNewLobby({...newLobby, name: e.target.value})} style={{ background: 'var(--bg-color)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '12px', boxShadow: 'none' }} />
           </div>
-          
-          <div className="mb-3">
-            <label className="form-label small fw-bold mb-2" style={{ color: 'var(--text-muted)' }}>VIBE / ΚΑΤΗΓΟΡΙΑ</label>
-            <select className="form-select border-0" value={newLobby.type} onChange={(e) => setNewLobby({...newLobby, type: e.target.value})} style={{ background: 'var(--bg-color)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '12px', boxShadow: 'none' }}>
-              <option>Διασκέδαση</option>
-              <option>Night Out</option>
-              <option>Φαγητό</option>
-              <option>Καφέ / Χαλαρά</option>
-              <option>Φύση / Δραστηριότητα</option>
-            </select>
-          </div>
+
+
+<div className="mb-3">
+  <label className="form-label small fw-bold mb-2" style={{ color: 'var(--text-muted)' }}>VIBE / ΚΑΤΗΓΟΡΙΑ</label>
+  <select 
+    className="form-select border-0" 
+    value={newLobby.type} 
+    onChange={(e) => setNewLobby({...newLobby, type: e.target.value})} 
+    style={{ background: 'var(--bg-color)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '16px', padding: '12px', boxShadow: 'none' }}
+  >
+    <option value="Διασκέδαση">Διασκέδαση</option>
+    <option value="Φύση">Φύση</option>
+    <option value="Πολιτισμός">Πολιτισμός</option>
+    <option value="Γαστρονομία">Γαστρονομία</option>
+    <option value="Ευεξία">Ευεξία</option>
+    <option value="Αδρεναλίνη">Αδρεναλίνη</option>
+    <option value="Αθλητισμός">Αθλητισμός</option>
+    <option value="Ρομαντικά">Ρομαντικά</option>
+  </select>
+</div>
           
           <div className="mb-4">
             <label className="form-label small fw-bold mb-2" style={{ color: 'var(--text-muted)' }}>ΠΕΡΙΟΧΗ</label>
