@@ -41,10 +41,17 @@ function Chatbot() {
     try {
       const res = await sendMessageToChatbot(text);
 
+      let cleanedAiText = "";
+      if (res && typeof res === "object") {
+        cleanedAiText = res.reply || res.message || JSON.stringify(res);
+      } else {
+        cleanedAiText = res;
+      }
+
       const aiMsg = {
         id: `ai-${Date.now()}-${Math.random().toString(16).slice(2)}`,
         from: "ai",
-        text: res.reply,
+        text: cleanedAiText,
       };
 
       setMessages((prev) => [...prev, aiMsg]);
