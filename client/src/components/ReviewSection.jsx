@@ -15,11 +15,17 @@ export default function ReviewSection({ activityId }) {
   useEffect(() => {
     const loadReviews = async () => {
       try {
+        setReviews([]); 
         setLoading(true);
         const res = await axios.get(`/api/reviews/${activityId}`);
+        if (Array.isArray(res.data)) {
         setReviews(res.data);
+        } else {
+          setReviews([]);
+        }
       } catch (err) {
         console.error("Σφάλμα κατά τη φόρτωση κριτικών:", err);
+        setReviews([]);
       } finally {
         setLoading(false);
       }
@@ -27,7 +33,7 @@ export default function ReviewSection({ activityId }) {
 
     if (activityId) loadReviews();
   }, [activityId]);
-
+    
   // υποβολή νέας κριτικής
   const submitReview = async (e) => {
     e.preventDefault();

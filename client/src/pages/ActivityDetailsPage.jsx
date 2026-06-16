@@ -174,7 +174,7 @@ export default function ActivityDetailsPage() {
 
             <div className="bento-card p-4 p-md-5 mb-4" style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderRadius: '32px' }}>
   {/*  το key={id}, αναγκάζει το ReviewSection να καθαρίζει τα παλιά δεδομένα και να κάνει update αμέσως */}
-  <ReviewSection activityId={Number(id)} key={id} />
+  <ReviewSection activityId={id} key={id} />
 </div>
           </div>
 
