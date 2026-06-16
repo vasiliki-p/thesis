@@ -7,34 +7,39 @@ export default function ReviewSection({ activityId }) {
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState("");
   const [rating, setRating] = useState(5);
-  const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
 
-  // φόρτωση κριτικών από το backend
+  // ΦΟΡΤΩΣΗ ΚΡΙΤΙΚΩΝ
   useEffect(() => {
+    let isMounted = true; // Προστασία για memory leaks
+
     const loadReviews = async () => {
+      if (!activityId) return;
+      
       try {
-        setReviews([]); 
-        setLoading(true);
         const res = await axios.get(`/api/reviews/${activityId}`);
-        if (Array.isArray(res.data)) {
-        setReviews(res.data);
-        } else {
-          setReviews([]);
+        if (isMounted) {
+          if (Array.isArray(res.data)) {
+            setReviews(res.data);
+          } else {
+            setReviews([]);
+          }
         }
       } catch (err) {
         console.error("Σφάλμα κατά τη φόρτωση κριτικών:", err);
-        setReviews([]);
-      } finally {
-        setLoading(false);
+        if (isMounted) setReviews([]);
       }
     };
 
-    if (activityId) loadReviews();
+    loadReviews();
+
+    return () => {
+      isMounted = false; // Καθαρισμός όταν αλλάζει το component
+    };
   }, [activityId]);
-    
-  // υποβολή νέας κριτικής
+
+  // ΥΠΟΒΟΛΗ ΚΡΙΤΙΚΗΣ
   const submitReview = async (e) => {
     e.preventDefault();
 
@@ -51,7 +56,6 @@ export default function ReviewSection({ activityId }) {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // optimistic update: βάζουμε την κριτική κατευθείαν στο state για να φανεί αμέσως
       const newRevObj = {
         id: response.data.id || Date.now(),
         username: userName, 
@@ -60,18 +64,18 @@ export default function ReviewSection({ activityId }) {
         created_at: new Date().toISOString()
       };
       
-      setReviews([newRevObj, ...reviews]);
+      setReviews(prevReviews => [newRevObj, ...prevReviews]);
       
-      // καθάρισμα φόρμας
       setNewReview("");
       setRating(5);
+      toast.success("Η κριτική σου προστέθηκε!");
     } catch (err) {
       console.error("Σφάλμα κατά την αποστολή κριτικής:", err);
       toast.error("Υπήρξε πρόβλημα με την αποστολή της κριτικής.");
     }
   };
 
-  // βοηθητική συνάρτηση για να ζωγραφίζει τα αστεράκια
+  // ΑΣΤΕΡΑΚΙΑ
   const renderStars = (currentRating, interactive = false) => {
     return [...Array(5)].map((_, index) => {
       const starValue = index + 1;
@@ -79,32 +83,20 @@ export default function ReviewSection({ activityId }) {
         <span 
           key={index} 
           onClick={() => setRating(starValue)}
-          style={{ 
-            cursor: 'pointer', 
-            color: starValue <= rating ? '#FFD700' : 'var(--text-muted)', 
-            opacity: starValue <= rating ? 1 : 0.4,
-            transition: 'all 0.2s' 
-          }}
+          style={{ cursor: 'pointer', color: starValue <= rating ? '#FFD700' : 'var(--text-muted)', opacity: starValue <= rating ? 1 : 0.4, transition: 'all 0.2s' }}
         >
           <StarFill size={24} className="me-1" />
         </span>
       ) : (
-        <span 
-          key={index} 
-          style={{ 
-            color: starValue <= currentRating ? '#FFD700' : 'var(--text-muted)',
-            opacity: starValue <= currentRating ? 1 : 0.4
-          }}
-        >
+        <span key={index} style={{ color: starValue <= currentRating ? '#FFD700' : 'var(--text-muted)', opacity: starValue <= currentRating ? 1 : 0.4 }}>
           <StarFill size={14} className="me-1" />
         </span>
       );
     });
   };
 
-  if (loading) {
-    return <div className="text-center py-4"><div className="spinner-border" style={{ color: 'var(--accent-color)' }}></div></div>;
-  }
+  // ΑΦΑΙΡΕΘΗΚΕ ΤΟ BLOCKING LOADING SPINNER
+  // if (loading) { return ... }
 
   return (
     <div>
@@ -112,7 +104,7 @@ export default function ReviewSection({ activityId }) {
         <ChatLeftTextFill style={{ color: 'var(--accent-color)' }} /> Κριτικές
       </h4>
 
-      {/* φόρμα κριτικής (μόνο αν είναι logged in) */}
+      {/* ΦΟΡΜΑ ΚΡΙΤΙΚΗΣ */}
       {token ? (
         <div className="p-4 mb-5 rounded-4" style={{ background: 'rgba(128,128,128,0.05)', border: '1px solid var(--card-border)' }}>
           <h6 className="fw-bold mb-3" style={{ color: 'var(--text-main)' }}>Γράψε την εμπειρία σου</h6>
@@ -126,24 +118,12 @@ export default function ReviewSection({ activityId }) {
             
             <div className="input-group">
               <textarea 
-                className="form-control" 
-                placeholder="Πώς σου φάνηκε;" 
-                rows="2"
-                value={newReview}
-                onChange={(e) => setNewReview(e.target.value)}
-                style={{ 
-                  background: 'var(--bg-color)', color: 'var(--text-main)', 
-                  border: '1px solid var(--card-border)', borderRadius: '16px',
-                  resize: 'none', boxShadow: 'none'
-                }}
+                className="form-control" placeholder="Πώς σου φάνηκε;" rows="2" value={newReview} onChange={(e) => setNewReview(e.target.value)}
+                style={{ background: 'var(--bg-color)', color: 'var(--text-main)', border: '1px solid var(--card-border)', borderRadius: '16px', resize: 'none', boxShadow: 'none' }}
               />
             </div>
             <div className="d-flex justify-content-end mt-3">
-              <button 
-                type="submit" 
-                className="btn px-4 py-2 fw-bold rounded-pill d-flex align-items-center gap-2 transition-btn"
-                style={{ background: 'var(--text-main)', color: 'var(--bg-color)' }}
-              >
+              <button type="submit" className="btn px-4 py-2 fw-bold rounded-pill d-flex align-items-center gap-2 transition-btn" style={{ background: 'var(--text-main)', color: 'var(--bg-color)' }}>
                 Αποστολή <SendFill size={14} />
               </button>
             </div>
@@ -156,22 +136,16 @@ export default function ReviewSection({ activityId }) {
         </div>
       )}
 
-      {/* λίστα με τις ήδη υπάρχουσες κριτικές */}
+      {/* ΛΙΣΤΑ ΚΡΙΤΙΚΩΝ */}
       <div className="d-flex flex-column gap-3">
         {reviews.length > 0 ? (
           reviews.map((review, index) => {
             const displayName = review.username || "Anonymous";
-
             return (
               <div key={review.id || index} className="p-4 rounded-4" style={{ background: 'var(--bg-color)', border: '1px solid var(--card-border)' }}>
                 <div className="d-flex justify-content-between align-items-start mb-2">
                   <div className="d-flex align-items-center gap-3">
-                    <img 
-                      src={`https://ui-avatars.com/api/?name=${displayName}&background=random&color=fff&rounded=true&bold=true`} 
-                      alt="User Avatar" 
-                      className="rounded-circle shadow-sm"
-                      style={{ width: "40px", height: "40px", objectFit: "cover", border: '2px solid var(--accent-color)' }} 
-                    />
+                    <img src={`https://ui-avatars.com/api/?name=${displayName}&background=random&color=fff&rounded=true&bold=true`} alt="User Avatar" className="rounded-circle shadow-sm" style={{ width: "40px", height: "40px", objectFit: "cover", border: '2px solid var(--accent-color)' }} />
                     <div>
                       <h6 className="mb-0 fw-bold" style={{ color: 'var(--text-main)' }}>{displayName}</h6>
                       <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>
@@ -179,13 +153,9 @@ export default function ReviewSection({ activityId }) {
                       </small>
                     </div>
                   </div>
-                  <div className="d-flex">
-                    {renderStars(review.rating || 5)}
-                  </div>
+                  <div className="d-flex">{renderStars(review.rating || 5)}</div>
                 </div>
-                <p className="mt-3 mb-0" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-                  {review.comment}
-                </p>
+                <p className="mt-3 mb-0" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{review.comment}</p>
               </div>
             );
           })

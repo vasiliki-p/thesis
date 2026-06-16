@@ -13,12 +13,10 @@ export default function LobbyRoom() {
   const [input, setInput] = useState("");
   const [participants, setParticipants] = useState([]);
   const [activity, setActivity] = useState(null);
-  
   const hasJoined = useRef(false);
   const chatContainerRef = useRef(null);
   const user = JSON.parse(localStorage.getItem("user")) || {};
   const displayName = user.username || "Guest"; 
-  
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -35,7 +33,7 @@ export default function LobbyRoom() {
         .then(res => setActivity(res.data))
         .catch(() => setActivity({ title: "Live Chat Δραστηριότητας" }));
     }
-    
+
     // φέρνουμε το ιστορικό του chat
     axios.get(`/api/lobby/messages/${id}`)
     .then(res => {
@@ -57,7 +55,7 @@ export default function LobbyRoom() {
         socket.emit("join-lobby", { activityId: id, userId: user.id, userName: displayName });
         hasJoined.current = true;
     }
-    
+
     const lobbyUpdate = (data) => {
         if (data.activityId === id) {
             // κρατάμε τους μοναδικούς χρήστες
@@ -91,6 +89,7 @@ export default function LobbyRoom() {
   // αποστολή μηνύματος
   const sendMessage = () => {
     if (!input.trim()) return;
+
     const msgData = { 
         id: Date.now(), 
         activityId: id, 
@@ -116,7 +115,9 @@ useEffect(() => {
 }, [messages]);
 
   return (
+
     <div className="container" style={{ paddingTop: "30px", paddingBottom: "100px", display: "flex", flexDirection: "column", gap: "24px" }}>
+
       {/* header δωματίου */}
       <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-2">
        <div className="d-flex align-items-center gap-3">
@@ -128,7 +129,9 @@ useEffect(() => {
           >
             <ArrowLeft size={20} />
           </button>
+
           
+
           {/* τίτλος Lobby */}
           <h2 className="m-0 fw-bold text-truncate" style={{ color: 'var(--text-main)', letterSpacing: "-1px", maxWidth: "200px" }}>
             {activity?.title || "Lobby"}
@@ -142,7 +145,6 @@ useEffect(() => {
             Αποχώρηση
           </button>
         </div>
-
 
         {/* online χρήστες */}
         <div className="d-flex align-items-center">
@@ -161,48 +163,29 @@ useEffect(() => {
           <div className="d-flex align-items-center gap-2"><span className="pulse-dot-live"></span><span className="fw-bold small text-uppercase" style={{ color: "var(--text-main)", letterSpacing: '1px' }}>Live Lobby Chat</span></div>
         </div>
 
-
         {/* μηνύματα */}
-<div ref={chatContainerRef} className="flex-grow-1 p-4 d-flex flex-column gap-3" style={{ background: "rgba(0,0,0,0.02)", overflowY: "auto" }}>
-  {messages.map((msg, index) => {
-    const isMe = msg.user === displayName; 
-    return (
-      <div key={msg.id || index} className={`d-flex flex-column ${isMe ? "align-items-end" : "align-items-start"}`}>
-        <small className="mb-1 fw-bold px-2" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{msg.user}</small>
-        
-        <div className={`p-3 shadow-sm ${isMe ? 'bg-primary text-white' : 'bg-light text-dark border'}`} 
-             style={{ maxWidth: "70%", fontSize: "0.95rem", fontWeight: "500", lineHeight: "1.5", borderRadius: isMe ? '20px 20px 4px 20px' : '20px 20px 20px 4px' }}>
-          {msg.text}
-          <div className="text-end mt-1" style={{ fontSize: "0.65rem", opacity: 0.8, color: isMe ? '#fff' : '#6c757d' }}>{msg.time}</div>
+      <div ref={chatContainerRef} className="flex-grow-1 p-4 d-flex flex-column gap-3" style={{ background: "rgba(0,0,0,0.01)", overflowY: "auto" }}>
+          {messages.map((msg, index) => {
+            const isMe = msg.user === displayName; 
+            return (
+              <div key={msg.id || index} className={`d-flex flex-column ${isMe ? "align-items-end" : "align-items-start"}`}>
+                <small className="mb-1 fw-bold px-2" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{msg.user}</small>
+                <div className="p-3 shadow-sm" style={{ maxWidth: "70%", fontSize: "0.95rem", fontWeight: "500", lineHeight: "1.5", background: isMe ? '#d97706' : 'var(--bg-color)', color: isMe ? '#fff' : 'var(--text-main)', borderRadius: isMe ? '20px 20px 4px 20px' : '20px 20px 20px 4px', border: isMe ? 'none' : '1px solid var(--card-border)' }}>
+                  {msg.text}
+                  <div className="text-end mt-1" style={{ fontSize: "0.65rem", opacity: 0.7, color: isMe ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)' }}>{msg.time}</div>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
-    );
-  })}
-</div>
 
         {/* input αποστολής */}
-<div className="p-4" style={{ borderTop: '1px solid var(--card-border)' }}>
-  <div className="d-flex gap-3 align-items-center p-2 bg-light border rounded-pill">
-    <input 
-      type="text" 
-      className="form-control border-0 bg-transparent px-3 text-dark" 
-      placeholder="Γράψτε ένα μήνυμα..." 
-      value={input} 
-      onChange={(e) => setInput(e.target.value)} 
-      onKeyDown={(e) => e.key === "Enter" && sendMessage()} 
-      style={{ boxShadow: "none", fontWeight: "500" }} 
-    />
-    {/* Σταθερό btn-primary για το κουμπί αποστολής */}
-    <button 
-      className="btn btn-primary d-flex align-items-center justify-content-center transition-btn rounded-circle" 
-      style={{ width: "44px", height: "44px", minWidth: "44px", border: 'none' }} 
-      onClick={sendMessage}
-    >
-      <SendFill size={16} />
-    </button>
-  </div>
-</div>
-       
+        <div className="p-4" style={{ borderTop: '1px solid var(--card-border)' }}>
+          <div className="d-flex gap-3 align-items-center p-2" style={{ background: 'var(--bg-color)', border: '1px solid var(--card-border)', borderRadius: "100px" }}>
+            <input type="text" className="form-control border-0 bg-transparent px-3" placeholder="Γράψτε ένα μήνυμα..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} style={{ boxShadow: "none", fontWeight: "500", color: 'var(--text-main)' }} />
+            <button className="btn d-flex align-items-center justify-content-center transition-btn" style={{ width: "44px", height: "44px", minWidth: "44px", background: '#d97706', color: '#fff', borderRadius: '50%', border: 'none' }} onClick={sendMessage}><SendFill size={16} /></button>
+          </div>
+        </div>
       </div>
     </div>
   );
