@@ -122,7 +122,7 @@ useEffect(() => {
       <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 px-2">
        <div className="d-flex align-items-center gap-3">
           <button 
-            className="btn rounded-circle shadow-sm transition-btn d-flex align-items-center justify-content-center" 
+            className="rounded-circle shadow-sm transition-btn d-flex align-items-center justify-content-center" 
             style={{ width: "42px", height: "42px", background: "var(--card-bg)", border: "1px solid var(--card-border)", color: 'var(--text-main)' }} 
             onClick={() => navigate(-1)} 
             title="Πίσω"
@@ -183,7 +183,7 @@ useEffect(() => {
         <div className="p-4" style={{ borderTop: '1px solid var(--card-border)' }}>
           <div className="d-flex gap-3 align-items-center p-2" style={{ background: 'var(--bg-color)', border: '1px solid var(--card-border)', borderRadius: "100px" }}>
             <input type="text" className="form-control border-0 bg-transparent px-3" placeholder="Γράψτε ένα μήνυμα..." value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} style={{ boxShadow: "none", fontWeight: "500", color: 'var(--text-main)' }} />
-            <button className="btn d-flex align-items-center justify-content-center transition-btn" style={{ width: "44px", height: "44px", minWidth: "44px", background: '#d97706', color: '#fff', borderRadius: '50%', border: 'none' }} onClick={sendMessage}><SendFill size={16} /></button>
+            <button className="d-flex align-items-center justify-content-center transition-btn" style={{ width: "44px", height: "44px", minWidth: "44px", background: '#d97706', color: '#fff', borderRadius: '50%', border: 'none' }} onClick={sendMessage}><SendFill size={16} /></button>
           </div>
         </div>
       </div>
