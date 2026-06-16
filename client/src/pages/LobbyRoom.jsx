@@ -170,7 +170,6 @@ useEffect(() => {
       <div key={msg.id || index} className={`d-flex flex-column ${isMe ? "align-items-end" : "align-items-start"}`}>
         <small className="mb-1 fw-bold px-2" style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>{msg.user}</small>
         
-        {/* ΔΙΟΡΘΩΣΗ: Χρήση σταθερών Bootstrap κλάσεων (bg-primary / bg-light) για να μη χάνονται τα χρώματα */}
         <div className={`p-3 shadow-sm ${isMe ? 'bg-primary text-white' : 'bg-light text-dark border'}`} 
              style={{ maxWidth: "70%", fontSize: "0.95rem", fontWeight: "500", lineHeight: "1.5", borderRadius: isMe ? '20px 20px 4px 20px' : '20px 20px 20px 4px' }}>
           {msg.text}

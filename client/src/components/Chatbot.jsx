@@ -67,29 +67,48 @@ function Chatbot() {
     }
   };
 
-  // ψάχνει για κρυφά links στο μήνυμα του AI (πχ. {{LINK:/activities/2}}) και φτιάχνει κουμπί
+  
+
+  // Ψάχνει για ΟΛΑ τα κρυφά links στο μήνυμα του AI (πχ. {{LINK:/activities/2}}) 
+  // και φτιάχνει inline κουμπιά στη σωστή θέση του κειμένου.
   const formatMessage = (msg) => {
-    const linkMatch = msg.text.match(/{{LINK:(.*?)}}/);
-    const cleanText = msg.text.replace(/{{LINK:.*?}}/, "").trim();
-    const linkUrl = linkMatch ? linkMatch[1] : null;
+    // Αν το μήνυμα είναι από τον χρήστη, το δείχνουμε ως έχει.
+    if (msg.from !== "ai") {
+      return <span>{msg.text}</span>;
+    }
+
+    // Χωρίζουμε το κείμενο χρησιμοποιώντας το regex.
+    // Η παρένθεση () στο regex κρατάει και τα ίδια τα links μέσα στο array που επιστρέφεται.
+    const parts = msg.text.split(/({{LINK:.*?}})/);
 
     return (
       <div>
-        {cleanText}
-        {msg.from === "ai" && linkUrl && (
-          <div style={{ marginTop: "10px" }}>
-            <Link
-              to={linkUrl}
-              style={styles.linkButton}
-              onClick={() => setIsOpen(false)}
-            >
-              🚀 Δες την πρόταση
-            </Link>
-          </div>
-        )}
+        {parts.map((part, index) => {
+          // Ελέγχουμε αν το τρέχον κομμάτι είναι link
+          const linkMatch = part.match(/{{LINK:(.*?)}}/);
+
+          if (linkMatch) {
+            const linkUrl = linkMatch[1];
+            return (
+              <span key={index} style={{ display: "inline-block", margin: "2px 4px" }}>
+                <Link
+                  to={linkUrl}
+                  style={styles.linkButton}
+                  onClick={() => setIsOpen(false)}
+                >
+                  🚀 Δες εδώ
+                </Link>
+              </span>
+            );
+          }
+
+          // Αν είναι απλό κείμενο, το κάνουμε render κανονικά
+          return <span key={index}>{part}</span>;
+        })}
       </div>
     );
   };
+
 
   return (
     <>
@@ -210,6 +229,7 @@ const styles = {
     fontSize: 14,
     lineHeight: "1.5",
     wordWrap: "break-word",
+    whiteSpace: "pre-wrap", 
   },
   inputArea: {
     display: "flex",
