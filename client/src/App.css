@@ -113,6 +113,22 @@ p, .card-text {
   color: #000 !important;
 }
 
+.card-content h1, .card-content h2, .card-content h3, .card-content h4,
+.tiktok-info h1, .tiktok-info h2, .tiktok-info h3, .tiktok-info h4 {
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8) !important;
+}
+
+.card-content p, .card-content span:not(.tag-pill),
+.tiktok-info p, .tiktok-info span:not(.tag-pill) {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 5px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Εξασφαλίζουμε ότι και το ταμπελάκι (π.χ. "Πολιτισμός") μένει λευκό */
+.tag-pill {
+  color: #FFFFFF !important; 
+}
 /* Η "Κόκκινη Βελόνα" της Πυξίδας - Κουμπί Αποσύνδεσης  */
 .logout-btn {
   background: transparent !important;       
