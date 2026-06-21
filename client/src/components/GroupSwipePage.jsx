@@ -174,7 +174,7 @@ export default function GroupSwipePage() {
     );
   }
 
-  // empty state (δεν υπάρχουν κάρτες για αυτά τα φίλτρα)
+  // δεν υπάρχουν κάρτες για αυτά τα φίλτρα
   if (!loading && activities.length === 0) {
     return (
       <div className="container d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "100vh", paddingTop: "80px", background: "var(--bg-color)" }}>
@@ -272,7 +272,7 @@ export default function GroupSwipePage() {
           
         </div>
       ) : (
-        /* οθόνη τερματισμού (no more cards) */
+        /* οθόνη τερματισμού  */
         <div className="d-flex flex-column align-items-center justify-content-center text-center p-5" style={{ border: '2px dashed var(--accent-color)', borderRadius: '30px', background: 'var(--card-bg)', width: '90%', maxWidth: '420px', height: '60vh' }}>
           <div className="display-1 mb-3">🏆</div>
           <h3 className="fw-bold mb-2" style={{ color: 'var(--text-main)' }}>Τα είδατε όλα!</h3>

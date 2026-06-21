@@ -95,8 +95,7 @@ export default function ReviewSection({ activityId }) {
     });
   };
 
-  // ΑΦΑΙΡΕΘΗΚΕ ΤΟ BLOCKING LOADING SPINNER
-  // if (loading) { return ... }
+
 
   return (
     <div>

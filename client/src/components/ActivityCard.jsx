@@ -107,7 +107,7 @@ export default function ActivityCard({ activity }) {
   );
 }
 
-/* ================= PROPTYPES ================= */
+
 ActivityCard.propTypes = {
   activity: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
