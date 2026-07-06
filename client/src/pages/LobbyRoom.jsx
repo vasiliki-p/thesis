@@ -86,6 +86,10 @@ export default function LobbyRoom() {
     };
   }, []);
 
+const Exit = () => {
+    socket.emit("leave-lobby", { activityId: id, userId: user.id });
+    navigate('/lobbies'); // Πλοήγηση μετά την αποχώρηση
+};
   // αποστολή μηνύματος
   const sendMessage = () => {
     if (!input.trim()) return;
@@ -106,7 +110,7 @@ export default function LobbyRoom() {
   // auto-scroll κάτω όταν έρχεται νέο μήνυμα
 useEffect(() => {
     if (chatContainerRef.current) {
-        // Κάνει scroll ΜΟΝΟ τον εαυτό του, όχι όλη τη σελίδα!
+        // Κάνει scroll τον εαυτό του, όχι όλη τη σελίδα
         chatContainerRef.current.scrollTo({
             top: chatContainerRef.current.scrollHeight,
             behavior: "smooth"
@@ -124,7 +128,7 @@ useEffect(() => {
           <button 
             className="rounded-circle shadow-sm transition-btn d-flex align-items-center justify-content-center" 
             style={{ width: "42px", height: "42px", background: "var(--card-bg)", border: "1px solid var(--card-border)", color: 'var(--text-main)' }} 
-            onClick={() => navigate(-1)} 
+            onClick={Exit}
             title="Πίσω"
           >
             <ArrowLeft size={20} />
@@ -140,7 +144,7 @@ useEffect(() => {
           <button 
             className="btn rounded-pill px-3 py-1 fw-bold shadow-sm transition-btn ms-2 d-none d-md-block" 
             style={{ background: "#fee2e2", border: "1px solid #f87171", color: '#dc2626', fontSize: "0.85rem" }} 
-            onClick={() => navigate('/lobbies')}
+            onClick={() => navigate(-1)}
           >
             Αποχώρηση
           </button>

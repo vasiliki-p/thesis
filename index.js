@@ -35,7 +35,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- 3. DATA STORAGE ΓΙΑ ΤΑ LOBBIES ---
 // κρατάει τους χρήστες που είναι online ανά δραστηριότητα
 let publicLobbies = {}; 
 
