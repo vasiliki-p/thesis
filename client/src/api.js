@@ -56,7 +56,7 @@ export const addReview = async (activity_id, rating, comment) => {
   const token = localStorage.getItem("token"); // Παίρνουμε το token
   const res = await axios.post(
     `${API_URL}/reviews`, 
-    { activity_id, rating, comment }, // Αφαιρέσαμε το user_id!
+    { activity_id, rating, comment }, // Αφαιρέσαμε το user_id
     { headers: { Authorization: `Bearer ${token}` } } // Στέλνουμε το token στα headers
   );
   return res.data;

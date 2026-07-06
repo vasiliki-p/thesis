@@ -25,13 +25,25 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.query(
-      `INSERT INTO users (username, email, password)
-       VALUES (?, ?, ?)`,
+const [result] = await db.query(
+      `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,
       [username, email, hashedPassword]
     );
 
-    res.json({ message: "Ο χρήστης εγγράφηκε επιτυχώς!" });
+    const userId = result.insertId;
+
+    const token = jwt.sign(
+      { id: userId, email: email },
+      process.env.JWT_SECRET,
+      { expiresIn: "12h" }
+    );
+
+
+res.json({ 
+        message: "Ο χρήστης εγγράφηκε επιτυχώς!",
+        token,
+        user: { id: userId, username, email }
+    });
 
   } catch (err) {
     console.error("REGISTER ERROR:", err);
