@@ -148,7 +148,7 @@ router.get('/activities/:sessionId', async (req, res) => {
         const roomCategory = sessionData[0].type ? sessionData[0].type.trim() : "";
         const roomLocation = sessionData[0].location ? sessionData[0].location.trim() : "";
 
-        console.log(`🔍 Μοιράζω κάρτες για: Κατηγορία="${roomCategory}", Περιοχή="${roomLocation}"`);
+        console.log(`Μοιράζω κάρτες για: Κατηγορία="${roomCategory}", Περιοχή="${roomLocation}"`);
         
         // ψάχνουμε με LIKE για να πιάνει ορθογραφικά κλπ
         const [activities] = await db.query(`
