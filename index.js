@@ -68,8 +68,8 @@ app.get('/api/lobby/messages/:activityId', async (req, res) => {
 });
 
 app.post('/api/lobby/join', authenticateToken, (req, res) => {
-    const { activityId, userName } = req.body; // Σβήσαμε το userId από εδώ
-    const userId = req.user.id; // Το παίρνουμε με ασφάλεια από το Token!
+    const { activityId, userName } = req.body;
+    const userId = req.user.id; //  παίρνουμε userId με ασφάλεια από το Token
     
     if (!activityId || activityId === "undefined") {
         return res.status(400).json({ error: "Missing or Invalid Activity ID" });
