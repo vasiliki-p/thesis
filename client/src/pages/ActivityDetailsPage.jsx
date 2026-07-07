@@ -167,7 +167,7 @@ export default function ActivityDetailsPage() {
               <div>
                 <h6 className="fw-bold mb-2" style={{ color: 'var(--text-main)', letterSpacing: '-0.5px' }}>AI Pyxis Insight</h6>
                 <p className="mb-0 fst-italic" style={{ color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                  "{/* Δημιουργούμε μια μεταβλητή για το insight */}
+                  {/* Δημιουργούμε μια μεταβλητή για το insight */}
 { (state?.ai_reason || activity.ai_summary) && (
   <div className="bento-card p-4 mb-4 d-flex align-items-start gap-3" 
        style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderLeft: '4px solid var(--accent-color)', borderRadius: '24px' }}>
@@ -181,7 +181,7 @@ export default function ActivityDetailsPage() {
       </p>
     </div>
   </div>
-)}"
+)}
                 </p>
               </div>
             </div>
