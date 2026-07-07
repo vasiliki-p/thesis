@@ -167,21 +167,7 @@ export default function ActivityDetailsPage() {
               <div>
                 <h6 className="fw-bold mb-2" style={{ color: 'var(--text-main)', letterSpacing: '-0.5px' }}>AI Pyxis Insight</h6>
                 <p className="mb-0 fst-italic" style={{ color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
-                  {/* Δημιουργούμε μια μεταβλητή για το insight */}
-{ (state?.ai_reason || activity.ai_summary) && (
-  <div className="bento-card p-4 mb-4 d-flex align-items-start gap-3" 
-       style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', borderLeft: '4px solid var(--accent-color)', borderRadius: '24px' }}>
-    <div className="p-2 rounded-circle d-flex align-items-center justify-content-center" style={{ background: 'rgba(23, 224, 160, 0.15)' }}>
-      <Magic size={24} style={{ color: 'var(--accent-color)' }} />
-    </div>
-    <div>
-      <h6 className="fw-bold mb-2" style={{ color: 'var(--text-main)', letterSpacing: '-0.5px' }}>AI Pyxis Insight</h6>
-      <p className="mb-0 fst-italic" style={{ color: 'var(--text-muted)', lineHeight: '1.6', fontSize: '0.95rem' }}>
-        "{state?.ai_reason || activity.ai_summary}"
-      </p>
-    </div>
-  </div>
-)}
+                  "{state?.ai_reason || activity.ai_summary || 'Η τέλεια επιλογή για να ξεφύγεις από τη ρουτίνα. Ιδανικό για εσένα που αναζητάς νέες και αυθεντικές εμπειρίες στην πόλη!'}"
                 </p>
               </div>
             </div>
