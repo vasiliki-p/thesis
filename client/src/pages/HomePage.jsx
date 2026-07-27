@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PersonalChoice from '../components/PersonalChoice'; 
 import SurpriseDice from '../components/SurpriseDice'; 
@@ -14,6 +14,18 @@ export default function HomePage() {
 
   const [showModal, setShowModal] = useState(false);
   const [pin, setPin] = useState('');
+  
+  // State για το Demo Pop-up
+  const [showDemoPopup, setShowDemoPopup] = useState(false);
+
+  // Εμφάνιση του Pop-up αν ο χρήστης δεν είναι συνδεδεμένος
+  useEffect(() => {
+    if (!token) {
+      // Βάζουμε ένα μικρό delay (1 δευτερόλεπτο) για πιο ομαλό εφέ
+      const timer = setTimeout(() => setShowDemoPopup(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [token]);
 
   // είσοδος σε υπάρχον δωμάτιο
   const JoinLobby = async (mode) => {
@@ -29,25 +41,51 @@ export default function HomePage() {
     }
     
     try {
-      // τσεκάρουμε αν υπάρχει το δωμάτιο
       await axios.get(`/api/group/info/${pin}`, {
           headers: { Authorization: `Bearer ${token}` }
       });
       
-      // αν το βρήκε, πάμε εκεί που διάλεξε (chat ή swipe)
       if (mode === 'chat') {
         navigate(`/lobby/${pin}`);
       } else {
         navigate(`/group-swipe/${pin}`);
       }
     } catch (error) {
-      // Αν το backend γυρίσει 404 (Δεν βρέθηκε) ή 401
       toast.error('❌ Το δωμάτιο δεν βρέθηκε! Ελέγξτε το PIN σας.');
     }
   };
 
   return (
     <div className="position-relative" style={{ minHeight: '100vh', paddingBottom: '100px' }}>      
+      
+      {/* --- DEMO POP-UP MODAL --- */}
+      {showDemoPopup && (
+        <>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040, backgroundColor: 'rgba(0,0,0,0.7)' }}></div>
+          <div className="modal fade show d-block" tabIndex="-1" style={{ zIndex: 1050 }} onClick={() => setShowDemoPopup(false)}>
+            <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-content text-center p-4 shadow-lg" style={{ background: 'var(--card-bg)', border: '1px solid var(--accent-color)', borderRadius: '20px', backdropFilter: 'blur(10px)' }}>
+                <h3 className="fw-bold mb-3" style={{ color: 'var(--text-main)' }}>👋 Welcome to Pyxis Demo!</h3>
+                <p className="mb-4" style={{ color: 'var(--text-muted)' }}>
+                  To fully experience the AI Chatbot, Live Lobbies, and personalized features, please use the test account:
+                </p>
+                <div className="p-3 mb-4 rounded-3" style={{ background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--accent-color)' }}>
+                  <div className="mb-2"><strong style={{ color: 'var(--text-main)' }}>Email:</strong> demo@pyxis.com</div>
+                  <div><strong style={{ color: 'var(--text-main)' }}>Password:</strong> demo123</div>
+                </div>
+                <div className="d-flex gap-3 justify-content-center">
+                  <button className="btn btn-outline-secondary rounded-pill px-4" onClick={() => setShowDemoPopup(false)}>
+                    Close
+                  </button>
+                  <Link to="/login" className="btn rounded-pill px-4 fw-bold" style={{ background: 'var(--text-main)', color: 'var(--inverted-text)' }}>
+                    Log In Now
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
       
       {/* hero section */}
       <section className="d-flex flex-column justify-content-center align-items-center text-center px-3" style={{ minHeight: '80vh' }}>
@@ -65,30 +103,35 @@ export default function HomePage() {
           </p>
           
           <div className="d-flex flex-column align-items-center gap-4">
+            {/* Τα 2 βασικά Action Buttons */}
             <Link to="/activities" className="btn px-5 rounded-pill shadow-lg border-0 d-flex align-items-center justify-content-center fw-bold transition-btn" style={{ background: 'var(--text-main)', color: 'var(--inverted-text)', height: '60px', width: '250px' }}>
               Ξεκίνα εδώ
             </Link>
-            <div
-  className="mt-4 p-3 rounded-4"
-  style={{
-    maxWidth: "650px",
-    margin: "0 auto",
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(255,255,255,0.15)"
-  }}
->
-  <h6 className="fw-bold mb-2">🎓 Demo Version</h6>
-
-  <p className="mb-0 small" style={{ color: "var(--text-muted)" }}>
-    Browse activities without an account.
-    <br />
-    Create a free account to unlock AI recommendations, interactive lobbies,
-    reviews, favorites and personalized statistics.
-  </p>
-</div>
+            
             <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
               <SurpriseDice />
             </div>
+
+            {/* Το κουτί μεταφέρθηκε κάτω από τα 2 actions */}
+            {!token && (
+              <div
+                className="mt-2 p-3 rounded-4"
+                style={{
+                  maxWidth: "650px",
+                  margin: "0 auto",
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)"
+                }}
+              >
+                <h6 className="fw-bold mb-2">🎓 Demo Credentials</h6>
+                <p className="mb-2 small" style={{ color: "var(--text-muted)" }}>
+                  Log in to unlock AI recommendations, interactive lobbies, reviews, and personalized statistics.
+                </p>
+                <div className="small fw-bold" style={{ color: 'var(--accent-color)' }}>
+                  Email: <span style={{ color: 'var(--text-main)' }}>demo@pyxis.com</span> | Pass: <span style={{ color: 'var(--text-main)' }}>demo123</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
