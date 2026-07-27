@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PersonalChoice from '../components/PersonalChoice'; 
 import SurpriseDice from '../components/SurpriseDice'; 
@@ -14,7 +14,7 @@ export default function HomePage() {
 
   const [showModal, setShowModal] = useState(false);
   const [pin, setPin] = useState('');
-  
+
   // State για το Demo Pop-up
   const [showDemoPopup, setShowDemoPopup] = useState(false);
 
@@ -41,24 +41,27 @@ export default function HomePage() {
     }
     
     try {
+      // τσεκάρουμε αν υπάρχει το δωμάτιο
       await axios.get(`/api/group/info/${pin}`, {
           headers: { Authorization: `Bearer ${token}` }
       });
       
+      // αν το βρήκε, πάμε εκεί που διάλεξε (chat ή swipe)
       if (mode === 'chat') {
         navigate(`/lobby/${pin}`);
       } else {
         navigate(`/group-swipe/${pin}`);
       }
     } catch (error) {
+      // Αν το backend γυρίσει 404 (Δεν βρέθηκε) ή 401
       toast.error('❌ Το δωμάτιο δεν βρέθηκε! Ελέγξτε το PIN σας.');
     }
   };
 
   return (
-    <div className="position-relative" style={{ minHeight: '100vh', paddingBottom: '100px' }}>      
-      
-      {/* --- DEMO POP-UP MODAL --- */}
+    <div className="position-relative" style={{ minHeight: '100vh', paddingBottom: '100px' }}>       
+     
+     { /* --- DEMO POP-UP MODAL --- */}
       {showDemoPopup && (
         <>
           <div className="modal-backdrop fade show" style={{ zIndex: 1040, backgroundColor: 'rgba(0,0,0,0.7)' }}></div>
@@ -86,7 +89,7 @@ export default function HomePage() {
           </div>
         </>
       )}
-      
+            
       {/* hero section */}
       <section className="d-flex flex-column justify-content-center align-items-center text-center px-3" style={{ minHeight: '80vh' }}>
         <div className="container">
@@ -103,7 +106,6 @@ export default function HomePage() {
           </p>
           
           <div className="d-flex flex-column align-items-center gap-4">
-            {/* Τα 2 βασικά Action Buttons */}
             <Link to="/activities" className="btn px-5 rounded-pill shadow-lg border-0 d-flex align-items-center justify-content-center fw-bold transition-btn" style={{ background: 'var(--text-main)', color: 'var(--inverted-text)', height: '60px', width: '250px' }}>
               Ξεκίνα εδώ
             </Link>
@@ -111,27 +113,6 @@ export default function HomePage() {
             <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
               <SurpriseDice />
             </div>
-
-            {/* Το κουτί μεταφέρθηκε κάτω από τα 2 actions */}
-            {!token && (
-              <div
-                className="mt-2 p-3 rounded-4"
-                style={{
-                  maxWidth: "650px",
-                  margin: "0 auto",
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.15)"
-                }}
-              >
-                <h6 className="fw-bold mb-2">🎓 Demo Credentials</h6>
-                <p className="mb-2 small" style={{ color: "var(--text-muted)" }}>
-                  Log in to unlock AI recommendations, interactive lobbies, reviews, and personalized statistics.
-                </p>
-                <div className="small fw-bold" style={{ color: 'var(--accent-color)' }}>
-                  Email: <span style={{ color: 'var(--text-main)' }}>demo@pyxis.com</span> | Pass: <span style={{ color: 'var(--text-main)' }}>demo123</span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>
