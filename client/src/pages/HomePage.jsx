@@ -68,7 +68,24 @@ export default function HomePage() {
             <Link to="/activities" className="btn px-5 rounded-pill shadow-lg border-0 d-flex align-items-center justify-content-center fw-bold transition-btn" style={{ background: 'var(--text-main)', color: 'var(--inverted-text)', height: '60px', width: '250px' }}>
               Ξεκίνα εδώ
             </Link>
-            
+            <div
+  className="mt-4 p-3 rounded-4"
+  style={{
+    maxWidth: "650px",
+    margin: "0 auto",
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.15)"
+  }}
+>
+  <h6 className="fw-bold mb-2">🎓 Demo Version</h6>
+
+  <p className="mb-0 small" style={{ color: "var(--text-muted)" }}>
+    Browse activities without an account.
+    <br />
+    Create a free account to unlock AI recommendations, interactive lobbies,
+    reviews, favorites and personalized statistics.
+  </p>
+</div>
             <div style={{ transform: 'scale(0.75)', transformOrigin: 'center' }}>
               <SurpriseDice />
             </div>
