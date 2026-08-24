@@ -96,7 +96,7 @@ router.post("/suggest", async (req, res) => {
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
         ],
-        model: "llama-3.1-8b-instant",
+    model: "openai/gpt-oss-120b",
         temperature: 0.1, 
         response_format: { type: "json_object" }
     });
@@ -152,7 +152,7 @@ router.post("/chatbot", async (req, res) => {
                 { role: "system", content: systemPrompt },
                 { role: "user", content: message }
             ],
-            model: "llama-3.1-8b-instant",
+    model: "openai/gpt-oss-120b",
             temperature: 0.0 // απόλυτη υπακοή στους κανόνες, καθόλου φαντασία
         });
 
