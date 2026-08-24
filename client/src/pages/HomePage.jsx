@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PersonalChoice from '../components/PersonalChoice'; 
 import SurpriseDice from '../components/SurpriseDice'; 
@@ -14,6 +14,18 @@ export default function HomePage() {
 
   const [showModal, setShowModal] = useState(false);
   const [pin, setPin] = useState('');
+
+  // State για το Demo Pop-up
+  const [showDemoPopup, setShowDemoPopup] = useState(false);
+
+  // Εμφάνιση του Pop-up αν ο χρήστης δεν είναι συνδεδεμένος
+  useEffect(() => {
+    if (!token) {
+      // Βάζουμε ένα μικρό delay (1 δευτερόλεπτο) για πιο ομαλό εφέ
+      const timer = setTimeout(() => setShowDemoPopup(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [token]);
 
   // είσοδος σε υπάρχον δωμάτιο
   const JoinLobby = async (mode) => {
@@ -47,8 +59,37 @@ export default function HomePage() {
   };
 
   return (
-    <div className="position-relative" style={{ minHeight: '100vh', paddingBottom: '100px' }}>      
-      
+    <div className="position-relative" style={{ minHeight: '100vh', paddingBottom: '100px' }}>       
+     
+     { /* --- DEMO POP-UP MODAL --- */}
+      {showDemoPopup && (
+        <>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040, backgroundColor: 'rgba(0,0,0,0.7)' }}></div>
+          <div className="modal fade show d-block" tabIndex="-1" style={{ zIndex: 1050 }} onClick={() => setShowDemoPopup(false)}>
+            <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-content text-center p-4 shadow-lg" style={{ background: 'var(--card-bg)', border: '1px solid var(--accent-color)', borderRadius: '20px', backdropFilter: 'blur(10px)' }}>
+                <h3 className="fw-bold mb-3" style={{ color: 'var(--text-main)' }}>👋 Welcome to Pyxis Demo!</h3>
+                <p className="mb-4" style={{ color: 'var(--text-muted)' }}>
+                  To fully experience the AI Chatbot, Live Lobbies, and personalized features, please use the test account:
+                </p>
+                <div className="p-3 mb-4 rounded-3" style={{ background: 'rgba(0,0,0,0.2)', border: '1px dashed var(--accent-color)' }}>
+                  <div className="mb-2"><strong style={{ color: 'var(--text-main)' }}>Email:</strong> demo@pyxis.com</div>
+                  <div><strong style={{ color: 'var(--text-main)' }}>Password:</strong> demo123</div>
+                </div>
+                <div className="d-flex gap-3 justify-content-center">
+                  <button className="btn btn-outline-secondary rounded-pill px-4" onClick={() => setShowDemoPopup(false)}>
+                    Close
+                  </button>
+                  <Link to="/login" className="btn rounded-pill px-4 fw-bold" style={{ background: 'var(--text-main)', color: 'var(--inverted-text)' }}>
+                    Log In Now
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+            
       {/* hero section */}
       <section className="d-flex flex-column justify-content-center align-items-center text-center px-3" style={{ minHeight: '80vh' }}>
         <div className="container">
