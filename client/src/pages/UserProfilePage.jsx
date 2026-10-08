@@ -7,6 +7,7 @@ import {
 } from "react-bootstrap-icons";
 import { Link } from "react-router-dom";
 import toast from 'react-hot-toast';
+import Swal from 'sweetalert2';
 
 function LoadingSpinner({ small = false }) {
   const sizeClass = small ? "spinner-border-sm" : "";
@@ -150,6 +151,35 @@ const handleRemoveFav = (activityId) => {
 
   if (loading) return <div className="d-flex justify-content-center align-items-center vh-100"><LoadingSpinner /></div>;
 
+const handleDeleteAccount = () => {
+  Swal.fire({
+    title: 'Είσαι σίγουρος/η;',
+    text: "Αυτή η ενέργεια δεν μπορεί να αναιρεθεί! Το ιστορικό και τα δεδομένα σου θα διαγραφούν οριστικά.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33', // Κόκκινο χρώμα για κίνδυνο
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Ναι, Οριστική Διαγραφή!',
+    cancelButtonText: 'Ακύρωση'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem('token');
+        // Προσοχή: Βάλε το σωστό URL του backend σου (ή απλά '/api/user/delete' αν έχεις proxy)
+        await axios.delete('/api/user/delete', { 
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Καθαρισμός του token από τον browser και ανακατεύθυνση στο Login
+        localStorage.removeItem('token');
+        window.location.href = '/login'; 
+      } catch (error) {
+        console.error(error);
+        Swal.fire('Σφάλμα', 'Υπήρξε πρόβλημα με τη διαγραφή του λογαριασμού.', 'error');
+      }
+    }
+  });
+};
   return (
     <div className="container" style={{ paddingTop: '30px', paddingBottom: '80px', minHeight: '100vh' }}>
       
@@ -230,6 +260,22 @@ const handleRemoveFav = (activityId) => {
           </div>
         </div>
 
+<div className="mt-5 text-center">
+  <button onClick={handleDeleteAccount} className="btn btn-outline-danger">
+    Οριστική Διαγραφή Λογαριασμού
+  </button>
+</div>
+
+{/* Κουμπί Οριστικής Διαγραφής */}
+            <div className="mt-4 pt-4 text-center border-top" style={{ borderColor: 'var(--card-border) !important' }}>
+              <button 
+                onClick={handleDeleteAccount} 
+                className="btn btn-outline-danger w-100 rounded-pill fw-bold"
+              >
+                Οριστική Διαγραφή Λογαριασμού
+              </button>
+            </div>
+            
         {/* αγαπημένα & ιστορικό */}
         <div className="col-lg-8 d-flex flex-column gap-4">
           

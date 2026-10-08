@@ -31,4 +31,21 @@ router.put("/profile", authenticateToken, async (req, res) => {
   }
 });
 
+// Endpoint για οριστική διαγραφή λογαριασμού
+router.delete('/delete', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Η διαγραφή του χρήστη από τον πίνακα users. 
+        // Αν έχεις ρυθμίσει σωστά τα Foreign Keys με "ON DELETE CASCADE" στη βάση σου[cite: 34], 
+        // αυτό θα διαγράψει αυτόματα και το ιστορικό, τις κριτικές και τις ψήφους του.
+        await db.query("DELETE FROM users WHERE id = ?", [userId]);
+
+        res.json({ success: true, message: "Ο λογαριασμός διαγράφηκε επιτυχώς." });
+    } catch (error) {
+        console.error("Σφάλμα κατά τη διαγραφή λογαριασμού:", error);
+        res.status(500).json({ error: "Αδυναμία διαγραφής λογαριασμού." });
+    }
+});
+
 module.exports = router;

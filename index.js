@@ -208,14 +208,31 @@ io.on('connection', (socket) => {
 
 
 // api endpoints 
-app.use('/api', authRoutes);
-app.use('/api/activities', activitiesRoutes);
-app.use('/api/reviews', reviewsRoutes);
-app.use("/api/ai", aiRoutes);
+
 app.use('/api/user', userRoutes);
 app.use("/api/favourites", favouritesRoute);
 app.use("/api/history", historyRoute);
 app.use('/api/group', groupRoutes);
+
+
+const rateLimit = require('express-rate-limit');
+
+const aiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // Χρονικό παράθυρο 15 λεπτών
+  max: 15, // Μέγιστος αριθμός αιτημάτων ανά IP
+  message: { error: "Έχεις στείλει πολλά μηνύματα στο AI. Σε παρακαλώ προσπάθησε ξανά σε λίγα λεπτά." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// api endpoints 
+app.use('/api', authRoutes);
+app.use('/api/activities', activitiesRoutes);
+app.use('/api/reviews', reviewsRoutes);
+
+// Εφαρμογή του aiLimiter ΑΠΟΚΛΕΙΣΤΙΚΑ στα routes της τεχνητής νοημοσύνης
+app.use("/api/ai", aiLimiter, aiRoutes);
+
 
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'client/build')));
