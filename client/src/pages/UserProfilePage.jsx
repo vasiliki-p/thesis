@@ -260,11 +260,6 @@ const handleDeleteAccount = () => {
           </div>
         </div>
 
-<div className="mt-5 text-center">
-  <button onClick={handleDeleteAccount} className="btn btn-outline-danger">
-    Οριστική Διαγραφή Λογαριασμού
-  </button>
-</div>
 
 {/* Κουμπί Οριστικής Διαγραφής */}
             <div className="mt-4 pt-4 text-center border-top" style={{ borderColor: 'var(--card-border) !important' }}>
