@@ -88,6 +88,8 @@ function App() {
           <Route path="/login" element={ <div className="login-page-wrapper"><LoginPage /></div>}/>
           <Route path="/register" element={<div className="container mt-5"><RegisterPage /></div>} />
           
+          <Route path="/privacy-policy" element={<div className="container mt-5"><PrivacyPolicy /></div>} />
+          
           {/* σελίδες μόνο για συνδεδεμένους */}
           <Route path="/suggestions" element={<ProtectedRoute><SuggestionsPage /></ProtectedRoute>} />
           <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
