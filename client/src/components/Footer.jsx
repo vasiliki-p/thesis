@@ -35,8 +35,9 @@ export default function Footer() {
             <h6 className="fw-bold mb-3 text-uppercase small ls-1">Info</h6>
             <ul className="list-unstyled d-flex flex-column gap-2">
               <li><Link to="/profile" className="text-secondary text-decoration-none small hover-link">Το Προφίλ μου</Link></li>
-              <li><span className="text-secondary small" style={{cursor:'pointer'}}>Όροι Χρήσης</span></li>
-              <li><span className="text-secondary small" style={{cursor:'pointer'}}>Πολιτική Απορρήτου</span></li>
+              <li><Link to="/terms" className="text-secondary text-decoration-none small hover-link">Όροι Χρήσης</Link></li>
+              <li><Link to="/privacy-policy" className="text-secondary text-decoration-none small hover-link">Πολιτική Απορρήτου</Link></li>
+              
             </ul>
           </div>
 
