@@ -19,6 +19,7 @@ import GroupSwipePage from './components/GroupSwipePage';
 import LobbyRoom from './pages/LobbyRoom';
 import LobbyDiscovery from './pages/LobbyDiscovery';
 import MatchResultsPage from './pages/MatchResultsPage';
+import PrivacyPolicy from './PrivacyPolicy';
 
 function App() {
   const userData = localStorage.getItem('user');
