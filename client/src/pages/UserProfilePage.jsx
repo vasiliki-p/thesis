@@ -256,12 +256,8 @@ const handleDeleteAccount = () => {
               <button type="submit" className="btn w-100 mt-2 fw-bold py-2 rounded-pill" style={{ background: 'var(--text-main)', color: 'var(--bg-color)' }}>
                 Αποθήκευση
               </button>
-            </form>
-          </div>
-        </div>
-
-
-{/* Κουμπί Οριστικής Διαγραφής */}
+            
+        {/* Κουμπί Οριστικής Διαγραφής */}
             <div className="mt-4 pt-4 text-center border-top" style={{ borderColor: 'var(--card-border) !important' }}>
               <button 
                 onClick={handleDeleteAccount} 
@@ -270,7 +266,11 @@ const handleDeleteAccount = () => {
                 Οριστική Διαγραφή Λογαριασμού
               </button>
             </div>
-            
+
+            </form>
+          </div>
+        </div>
+        
         {/* αγαπημένα & ιστορικό */}
         <div className="col-lg-8 d-flex flex-column gap-4">
           
