@@ -1,28 +1,26 @@
-const db = require('./db');
+require('dotenv').config();
+const axios = require('axios');
+const db = require('./db'); 
 
-// Βάλε το πραγματικό σου κλειδί εδώ μέσα στα εισαγωγικά!
-const API_KEY = 'TQE1LUFVAX2JEUNGH5OCBEZU0II25WQ4WVCDCQZTO033HVJD'; 
-
-const FOURSQUARE_API = 'https://api.foursquare.com/v3/places/search?near=Athens,%20GR&categories=13000,10000&limit=10';
+const FOURSQUARE_API = 'https://api.foursquare.com/v3/places/search';
 
 async function seedDatabase() {
     try {
         console.log("Αναζήτηση δεδομένων από Foursquare...");
         
-        const response = await fetch(FOURSQUARE_API, {
-            method: 'GET',
+        const response = await axios.get(FOURSQUARE_API, {
             headers: {
-                'Authorization': API_KEY, // Χρησιμοποιούμε τη μεταβλητή απευθείας
-                'Accept': 'application/json'
+                Authorization: process.env.FOURSQUARE_API_KEY,
+                accept: 'application/json'
+            },
+            params: {
+                near: 'Athens, GR',
+                categories: '13000,10000', 
+                limit: 10 
             }
         });
 
-        if (!response.ok) {
-            throw new Error(`Σφάλμα API: ${response.status} - ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const places = data.results;
+        const places = response.data.results;
 
         for (const place of places) {
             const title = place.name;
@@ -39,10 +37,8 @@ async function seedDatabase() {
         }
 
         console.log("Η εισαγωγή ολοκληρώθηκε! Πάτα Ctrl+C για έξοδο.");
-        process.exit(0);
     } catch (error) {
         console.error("Σφάλμα:", error.message);
-        process.exit(1);
     }
 }
 
