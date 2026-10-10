@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../db");
+const db = require("../db"); // Κρατάμε τη βάση για το chatbot ή άλλα δεδομένα
 const Groq = require("groq-sdk");
+const axios = require("axios");
 const path = require("path");
 
 require("dotenv").config({ path: path.join(__dirname, '..', '.env') });
@@ -13,114 +14,122 @@ try {
     console.warn("Groq Init Warning: API Key missing."); 
 }
 
-// έξυπνες προτάσεις με βάση τον καιρό και τα ενδιαφέροντα
+// Έξυπνες προτάσεις με χρήση Google Places API & AI
 router.post("/suggest", async (req, res) => {
   const { interests, location, budget, weather } = req.body; 
 
   try {
-    // φέρνουμε όλες τις δραστηριότητες από τη βάση
-    const [activities] = await db.query("SELECT * FROM activities");
+    // 1. Δημιουργία του ερωτήματος για την Google (π.χ. "Καφέ in Αθήνα")
+    const searchQuery = `${interests || 'αξιοθέατα και διασκέδαση'} in ${location || 'Ελλάδα'}`;
 
-    let filteredActs = activities;
+    // 2. Κλήση στο Google Places API (New)
+    const googleResponse = await axios.post(
+      'https://places.googleapis.com/v1/places:searchText',
+      {
+        textQuery: searchQuery,
+        maxResultCount: 15 // Φέρνουμε 15 αληθινά μαγαζιά/μέρη
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY,
+          // Ζητάμε συγκεκριμένα πεδία για να μην μας χρεώσει έξτρα η Google
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.priceLevel,places.types,places.rating'
+        }
+      }
+    );
 
-    // φίλτρο για τοποθεσία (αγνοούμε τόνους και κεφαλαία)
-    if (location) {
-        // συνάρτηση που αφαιρεί τόνους και κάνει τα γράμματα πεζά
-        const normalize = (text) => {
-            return text ? text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
-        };
+    const places = googleResponse.data.places || [];
 
-        const locClean = normalize(location).trim();
-        
-        filteredActs = filteredActs.filter(a => {
-            const dbLocClean = normalize(a.location);
-            return dbLocClean.includes(locClean) || locClean.includes(dbLocClean);
-        });
+    if (places.length === 0) {
+        return res.json({ suggestions: [] });
     }
 
-    // φίλτρο για budget (όσα κοστίζουν ίσα ή λιγότερα από το όριο)
+    // 3. Μετατροπή των δεδομένων της Google στη μορφή που περιμένει το React Frontend σου
+    const liveActivities = places.map(place => {
+      // Μετατροπή του Google priceLevel (PRICE_LEVEL_INEXPENSIVE κλπ) σε εκτιμώμενο κόστος
+      let estimatedCost = 0;
+      if (place.priceLevel === "PRICE_LEVEL_INEXPENSIVE") estimatedCost = 10;
+      if (place.priceLevel === "PRICE_LEVEL_MODERATE") estimatedCost = 30;
+      if (place.priceLevel === "PRICE_LEVEL_EXPENSIVE") estimatedCost = 60;
+      if (place.priceLevel === "PRICE_LEVEL_VERY_EXPENSIVE") estimatedCost = 100;
+
+      return {
+        id: place.id, // Χρησιμοποιούμε το αληθινό Google Place ID
+        title: place.displayName?.text || "Άγνωστο μέρος",
+        location: place.formattedAddress,
+        cost: estimatedCost,
+        category: (place.types && place.types[0]) || "Δραστηριότητα",
+        tags: place.types ? place.types.join(", ") : "",
+        rating: place.rating || 0,
+        // Για την ώρα βάζουμε ένα τυχαίο fallback, μετά μπορούμε να τραβήξουμε τις αληθινές photos της Google!
+        image_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(place.displayName?.text || 'P')}&background=random` 
+      };
+    });
+
+    // Φιλτράρισμα βάσει του Budget του χρήστη (αν έχει ορίσει)
+    let filteredActs = liveActivities;
     if (budget && !isNaN(budget)) {
         const maxBudget = Number(budget);
-        filteredActs = filteredActs.filter(a => Number(a.cost) <= maxBudget);
+        filteredActs = filteredActs.filter(a => a.cost <= maxBudget);
     }
-    // αν δεν βρέθηκε τίποτα σταματάμε εδώ για οικονομία στα tokens της AI
 
     if (filteredActs.length === 0) {
         return res.json({ suggestions: [] });
     }
 
-    // κρατάμε μόνο τα βασικά για να μην μπερδευτεί το μοντέλο
+    // 4. Στέλνουμε τα ζωντανά δεδομένα στο LLaMA για τελική βαθμολόγηση με βάση τον καιρό!
     const simpleActs = filteredActs.map(a => ({
         id: a.id, 
         title: a.title, 
-        outdoor: a.outdoor, 
         tags: a.tags
     }));
 
-    // οδηγίες προς την AI
     const systemPrompt = `
-      Είσαι ο "Pyxis AI", ένας κορυφαίος ταξιδιωτικός σύμβουλος για την Ελλάδα.
-      ΣΗΜΑΝΤΙΚΟ: Τα δεδομένα που λαμβάνεις έχουν ΗΔΗ περάσει από αυστηρό έλεγχο budget και τοποθεσίας. Μην ασχολείσαι με αυτούς τους παράγοντες.
+      Είσαι ο "Pyxis AI", ένας κορυφαίος ταξιδιωτικός σύμβουλος.
+      Βαθμολόγησε (ai_score 50-100) τις παρακάτω πραγματικές τοποθεσίες με βάση ΜΟΝΟ τον Καιρό και τα Ενδιαφέροντα του χρήστη.
 
-      Ο ΡΟΛΟΣ ΣΟΥ:
-      Βαθμολόγησε (ai_score 50-100) τις διαθέσιμες δραστηριότητες με βάση ΜΟΝΟ τον Καιρό και τα Ενδιαφέροντα του χρήστη.
+      ΚΑΝΟΝΕΣ:
+      1. ΚΑΙΡΟΣ: Αν ο καιρός είναι βροχερός, προτίμησε μουσεία/καφέ/εστιατόρια. Αν έχει ήλιο, προτίμησε πάρκα/παραλίες.
+      2. Επιστροφή ΑΥΣΤΗΡΑ σε JSON object.
+      3. Για κάθε πρόταση γράψε ένα reason (ελληνικά, max 15 λέξεις) γιατί ταιριάζει.
 
-      ΚΑΝΟΝΕΣ ΒΑΘΜΟΛΟΓΗΣΗΣ:
-      1. ΚΑΙΡΟΣ: Αν ο καιρός είναι "Rain", "Snow" ή "Thunderstorm", δώσε μεγάλο bonus (+30) σε δραστηριότητες εσωτερικού χώρου (outdoor=0) και ποινή (-30) σε εξωτερικού (outdoor=1).
-      2. ΕΝΔΙΑΦΕΡΟΝΤΑ: Ταίριαξε σημασιολογικά τα ενδιαφέροντα του χρήστη με τα "tags" ή τον τίτλο της δραστηριότητας (+40 πόντους για τέλειο ταίριασμα).
-
-      ΚΑΝΟΝΕΣ ΕΞΟΔΟΥ:
-      - Πρέπει να επιστρέψεις ΑΥΣΤΗΡΑ ένα JSON object.
-      - Για κάθε πρόταση, γράψε έναν ελκυστικό, φιλικό λόγο (reason) στα Ελληνικά (max 15 λέξεις) που να εξηγεί ΓΙΑΤΙ ταιριάζει στον χρήστη.
-      - Επέστρεψε ΜΟΝΟ όσες δραστηριότητες έχουν ai_score >= 50.
-
-      ΜΟΡΦΗ JSON ΠΟΥ ΑΠΑΙΤΕΙΤΑΙ:
+      ΜΟΡΦΗ JSON:
       {
         "matches": [
-          { "id": 1, "ai_score": 95, "reason": "Ιδανικό για βροχερή μέρα και ταιριάζει τέλεια στην αγάπη σου για την ιστορία!" }
+          { "id": "ChI...", "ai_score": 95, "reason": "Τέλειο καφέ για να χαλαρώσεις ενώ βρέχει έξω!" }
         ]
       }
     `;
 
-    const userPrompt = `
-      ΔΕΔΟΜΕΝΑ ΧΡΗΣΤΗ:
-      - Καιρός: "${weather || 'Clear'}"
-      - Ενδιαφέροντα / Διάθεση: "${interests || 'Οτιδήποτε ενδιαφέρον'}"
-      
-      ΔΙΑΘΕΣΙΜΕΣ ΔΡΑΣΤΗΡΙΟΤΗΤΕΣ (JSON):
-      ${JSON.stringify(simpleActs)}
-    `;
+    const userPrompt = `Δεδομένα: Καιρός: "${weather || 'Clear'}", Ενδιαφέροντα: "${interests || 'Βόλτα'}", Δραστηριότητες: ${JSON.stringify(simpleActs)}`;
 
     const completion = await groq.chat.completions.create({
         messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt }
         ],
-    model: "openai/gpt-oss-120b",
+        model: "openai/gpt-oss-120b", // Το μοντέλο που έχεις ορίσει
         temperature: 0.1, 
         response_format: { type: "json_object" }
     });
 
     const parsed = JSON.parse(completion.choices[0]?.message?.content || "{}");
     
-    // ενώνουμε τα αποτελέσματα του AI με τα πλήρη δεδομένα της βάσης μας
+    // 5. Ενώνουμε τις βαθμολογίες του AI με τα πλήρη δεδομένα της Google
     const finalSug = (parsed.matches || []).map(match => {
         const activity = filteredActs.find(a => a.id === match.id);
         return activity ? { ...activity, ai_score: match.ai_score, ai_reason: match.reason } : null;
     }).filter(a => a !== null);
 
-    // ταξινόμηση φθίνουσα βάσει του ai_score
-    
     finalSug.sort((a, b) => b.ai_score - a.ai_score);
-
     res.json({ suggestions: finalSug });
 
   } catch (err) {
-    console.error("Groq Error:", err);
-    res.json({ suggestions: [], error: "AI matching failed" });
+    console.error("Σφάλμα:", err.response ? err.response.data : err.message);
+    res.json({ suggestions: [], error: "Αποτυχία ανάκτησης δεδομένων" });
   }
 });
-
 
 // λειτουργία chatbot
 router.post("/chatbot", async (req, res) => {
