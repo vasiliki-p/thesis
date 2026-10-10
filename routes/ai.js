@@ -34,8 +34,7 @@ router.post("/suggest", async (req, res) => {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY,
           // Ζητάμε συγκεκριμένα πεδία για να μην μας χρεώσει έξτρα η Google
-          'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.priceLevel,places.types,places.rating'
-        }
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.priceLevel,places.types,places.rating,places.photos'        }
       }
     );
 
@@ -47,23 +46,31 @@ router.post("/suggest", async (req, res) => {
 
     // 3. Μετατροπή των δεδομένων της Google στη μορφή που περιμένει το React Frontend σου
     const liveActivities = places.map(place => {
-      // Μετατροπή του Google priceLevel (PRICE_LEVEL_INEXPENSIVE κλπ) σε εκτιμώμενο κόστος
       let estimatedCost = 0;
       if (place.priceLevel === "PRICE_LEVEL_INEXPENSIVE") estimatedCost = 10;
       if (place.priceLevel === "PRICE_LEVEL_MODERATE") estimatedCost = 30;
       if (place.priceLevel === "PRICE_LEVEL_EXPENSIVE") estimatedCost = 60;
       if (place.priceLevel === "PRICE_LEVEL_VERY_EXPENSIVE") estimatedCost = 100;
 
+      // 1. Ξεκινάμε με το fallback εικονίδιο (για την περίπτωση που ένα μαγαζί δεν έχει καμία φωτογραφία)
+      let imageUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(place.displayName?.text || 'P')}&background=random`; 
+
+      // 2. Αν η Google μας έστειλε φωτογραφίες, παίρνουμε την πρώτη και φτιάχνουμε το URL της!
+      if (place.photos && place.photos.length > 0) {
+          const photoName = place.photos[0].name;
+          // Ζητάμε την εικόνα σε ανάλυση 400x400 pixels για να φορτώνει γρήγορα
+          imageUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=400&maxWidthPx=400&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+      }
+
       return {
-        id: place.id, // Χρησιμοποιούμε το αληθινό Google Place ID
+        id: place.id, 
         title: place.displayName?.text || "Άγνωστο μέρος",
         location: place.formattedAddress,
         cost: estimatedCost,
         category: (place.types && place.types[0]) || "Δραστηριότητα",
         tags: place.types ? place.types.join(", ") : "",
         rating: place.rating || 0,
-        // Για την ώρα βάζουμε ένα τυχαίο fallback, μετά μπορούμε να τραβήξουμε τις αληθινές photos της Google!
-        image_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(place.displayName?.text || 'P')}&background=random` 
+        image_url: imageUrl // Τώρα περνάμε την αληθινή φωτογραφία!
       };
     });
 
