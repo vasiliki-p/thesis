@@ -120,7 +120,7 @@ export default function SuggestionsPage() {
             <label htmlFor="suggest-budget" className="form-label small fw-bold" style={{ color: 'var(--text-muted)' }}>Ποσό (€)</label>
             <div className="input-group" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--card-border)' }}>
               <span className="input-group-text border-0" style={{ background: 'var(--bg-color)', color: 'var(--text-muted)' }}><Wallet2 /></span>
-              <input id="suggest-budget" type="number" className="form-control border-0 ps-0" placeholder="50" value={filters.budget} onChange={(e) => setFilters({ ...filters, budget: e.target.value })} style={{ background: 'var(--bg-color)', color: 'var(--text-main)', boxShadow: 'none' }} />
+              <input id="suggest-budget" type="number" className="form-control border-0 ps-0" placeholder="π.χ. 50" value={filters.budget} onChange={(e) => setFilters({ ...filters, budget: e.target.value })} style={{ background: 'var(--bg-color)', color: 'var(--text-main)', boxShadow: 'none' }} />
             </div>
           </div>
 
@@ -128,7 +128,7 @@ export default function SuggestionsPage() {
             <label htmlFor="suggest-location" className="form-label small fw-bold" style={{ color: 'var(--text-muted)' }}>Περιοχή</label>
             <div className="input-group" style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--card-border)' }}>
               <span className="input-group-text border-0" style={{ background: 'var(--bg-color)', color: 'var(--text-muted)' }}><GeoAltFill /></span>
-              <input id="suggest-location" type="text" className="form-control border-0 ps-0" placeholder="Αθήνα" value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} style={{ background: 'var(--bg-color)', color: 'var(--text-main)', boxShadow: 'none' }} />
+              <input id="suggest-location" type="text" className="form-control border-0 ps-0" placeholder="π.χ.Αθήνα" value={filters.location} onChange={(e) => setFilters({ ...filters, location: e.target.value })} style={{ background: 'var(--bg-color)', color: 'var(--text-main)', boxShadow: 'none' }} />
             </div>
           </div>
 

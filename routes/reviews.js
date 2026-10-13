@@ -1,78 +1,78 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const db = require('../db');
-const authenticateToken = require("../middleware/auth"); 
+const db = require("../db");
+const axios = require("axios");
 
-// παίρνουμε όλες τις κριτικές (για το γενικό feed)
-router.get('/', async (req, res) => {
-  try {
-    const [results] = await db.query(`
-      SELECT reviews.*, users.username AS username, activities.title AS activity_title
-      FROM reviews
-      JOIN users ON reviews.user_id = users.id
-      ORDER BY reviews.created_at DESC
-    `);
-    res.json(results);
-  } catch (err) {
-    res.status(500).json({ error: "Σφάλμα κατά τη φόρτωση των αξιολογήσεων", details: err.message });
-  }
-});
+// Φέρνουμε τις κριτικές για μια δραστηριότητα (GET /api/reviews/:activityId)
+router.get("/:activityId", async (req, res) => {
+    const { activityId } = req.params;
 
-// οι κριτικές του συνδεδεμένου χρήστη
-router.get('/user', authenticateToken, async (req, res) => {
-  try {
-    const userId = req.user.id; // ID από middleware authenticateToken
-    const [results] = await db.query(`
-      SELECT reviews.*, activities.title AS activity_title, activities.category 
-      FROM reviews
-      JOIN activities ON reviews.activity_id = activities.id
-      WHERE reviews.user_id = ?
-      ORDER BY reviews.created_at DESC
-    `, [userId]);
-    
-    res.json(results);
-  } catch (err) {
-    res.status(500).json({ error: "Σφάλμα στη φόρτωση προσωπικών κριτικών", details: err.message });
-  }
-});
+    try {
+        let allReviews = [];
 
-// κριτικές για μια συγκεκριμένη δραστηριότητα
-router.get('/:activity_id', async (req, res) => {
-  try {
-    const activityId = req.params.activity_id;
-    const [results] = await db.query(`
-      SELECT reviews.*, users.username AS username
-      FROM reviews
-      JOIN users ON reviews.user_id = users.id
-      WHERE reviews.activity_id = ?
-      ORDER BY reviews.created_at DESC
-    `, [activityId]);
-    res.json(results);
-  } catch (err) {
-    res.status(500).json({ error: "Σφάλμα κατά τη φόρτωση της δραστηριότητας", details: err.message });
-  }
-});
+        // 1. Αν είναι αληθινό μέρος, ζητάμε τις κριτικές από την Google
+        if (activityId.startsWith("ChI")) {
+            const googleResponse = await axios.get(
+                `https://places.googleapis.com/v1/places/${activityId}`,
+                {
+                    headers: {
+                        'X-Goog-Api-Key': process.env.GOOGLE_PLACES_API_KEY,
+                        'X-Goog-FieldMask': 'reviews' // Ζητάμε ΜΟΝΟ το πεδίο των κριτικών
+                    }
+                }
+            );
 
-// προσθήκη νέας κριτικής
-router.post('/', authenticateToken, async (req, res) => {
-  try {
-    // Το user_id από το req.user.id
-    const { activity_id, rating, comment } = req.body;
-    const user_id = req.user.id; 
+            const googleReviews = googleResponse.data.reviews || [];
 
-    if (!activity_id || !rating) {
-      return res.status(400).json({ error: 'Λείπουν υποχρεωτικά πεδία' });
+            // Μετατρέπουμε τις κριτικές της Google στη μορφή της βάσης σου
+            const formattedGoogleReviews = googleReviews.map((review, index) => ({
+                id: `google_${index}`, // Ψεύτικο ID για το React
+                activity_id: activityId,
+                user_name: review.authorAttribution?.displayName || "Χρήστης Google",
+                rating: review.rating,
+                comment: review.text?.text || "",
+                // Αν η Google δίνει χρόνο τον κρατάμε, αλλιώς βάζουμε το τρέχον
+                created_at: review.publishTime || new Date().toISOString() 
+            }));
+
+            // Προσθέτουμε τις κριτικές της Google στη λίστα μας
+            allReviews = [...formattedGoogleReviews];
+        }
+
+        // 2. Ζητάμε και τις τοπικές κριτικές (αν υπάρχουν χρήστες του Pyxis που σχολίασαν)
+        const [localReviews] = await db.query(
+            "SELECT * FROM reviews WHERE activity_id = ? ORDER BY created_at DESC", 
+            [activityId]
+        );
+
+        // Ενώνουμε τις κριτικές της Google με αυτές των χρηστών σου (αν υπάρχουν)
+        allReviews = [...localReviews, ...allReviews];
+        
+        res.json(allReviews);
+
+    } catch (error) {
+        console.error("Σφάλμα κατά την ανάκτηση κριτικών:", error.response ? error.response.data : error.message);
+        res.status(500).json({ error: "Σφάλμα διακομιστή" });
     }
+});
 
-    const [result] = await db.query(
-      `INSERT INTO reviews (user_id, activity_id, rating, comment) VALUES (?, ?, ?, ?)`,
-      [user_id, activity_id, rating, comment]
-    );
-
-    res.json({ message: 'Η αξιολόγηση προστέθηκε επιτυχώς', id: result.insertId });
-  } catch (err) {
-    res.status(500).json({ error: "Αποτυχία προσθήκης αξιολόγησης", details: err.message });
-  }
+// Προσθήκη νέας κριτικής από χρήστη του Pyxis (POST /api/reviews)
+router.post("/", async (req, res) => {
+    // Ανάλογα με τα πεδία που έχεις στον πίνακά σου (πχ. name, user_name, text, comment κλπ)
+    const { activity_id, user_name, rating, comment } = req.body; 
+    
+    try {
+        // Αποθηκεύουμε στη βάση μας το σχόλιο, ακόμα και αν το μαγαζί είναι από την Google!
+        const [result] = await db.query(
+            "INSERT INTO reviews (activity_id, user_name, rating, comment) VALUES (?, ?, ?, ?)",
+            [activity_id, user_name, rating, comment]
+        );
+        
+        res.json({ id: result.insertId, activity_id, user_name, rating, comment });
+    } catch (error) {
+        console.error("Σφάλμα κατά την προσθήκη κριτικής:", error);
+        res.status(500).json({ error: "Σφάλμα διακομιστή κατά την αποθήκευση." });
+    }
 });
 
 module.exports = router;
