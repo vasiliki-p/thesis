@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate,useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { EnvelopeFill, LockFill, EyeFill, EyeSlashFill, CompassFill } from "react-bootstrap-icons";
 
 export default function LoginPage() {
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -11,7 +12,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const Login = async (e) => {
+  useEffect(() => {
+    // έλεγχος αν υπάρχει state από το Link (π.χ. από το demo popup)
+    if (location.state && location.state.email && location.state.password) {
+      setEmail(location.state.email);
+      setPassword(location.state.password);
+    } 
+    }  , [location.state]);
+
+    const Login = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
