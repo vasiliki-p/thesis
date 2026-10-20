@@ -13,7 +13,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // έλεγχος αν υπάρχει state από το Link (π.χ. από το demo popup)
+    // έλεγχος αν υπάρχει state από το modal (π.χ. από το demo popup)
     if (location.state && location.state.email && location.state.password) {
       setEmail(location.state.email);
       setPassword(location.state.password);

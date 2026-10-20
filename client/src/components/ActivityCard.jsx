@@ -20,10 +20,10 @@ const titleRules = [
 ];
 
 const categoryRules = [
-  { url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["διασκέδαση"] },
-  { url: "https://images.unsplash.com/photo-1501854140884-074bf86ee91c?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["φύση"] },
-  { url: "https://images.unsplash.com/photo-1599803654935-5b9d1c93578c?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["πολιτισμός"] },
-  { url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["γαστρονομία"] },
+  { url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["διασκεδαση"] },
+  { url: "https://images.unsplash.com/photo-1501854140884-074bf86ee91c?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["φυση"] },
+  { url: "https://images.unsplash.com/photo-1599803654935-5b9d1c93578c?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["πολιτισμος"] },
+  { url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80", categoryIncludes: ["γαστρονομια"] },
 ];
 
 const fallbackImg = "https://images.unsplash.com/photo-1488646953014-85cb44e25828?auto=format&fit=crop&w=800&q=80";
