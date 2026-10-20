@@ -7,51 +7,15 @@ import MarkerClusterGroup from "react-leaflet-cluster";
 import { GeoAltFill, ArrowRightCircleFill } from "react-bootstrap-icons";
 import PropTypes from "prop-types";
 
-// custom styles για τον χάρτη και τα εφέ των pins
+// custom styles για τον χάρτη
 const mapStyles = `
-  .custom-zenly-pin {
-    background: transparent;
-    border: none;
-  }
-  .map-pin-container {
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  .map-pin-container:hover { 
-    transform: scale(1.15) translateY(-5px); 
-    z-index: 1000 !important; 
-  }
-  .pin-avatar {
-    width: 45px; 
-    height: 45px; 
-    border-radius: 50%; /* Εδώ γίνεται τέλειος κύκλος */
-    border: 3px solid var(--accent-color, #17E0A0); 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4); 
-    object-fit: cover; 
-    background: #fff;
-  }
-
-  .custom-cluster-icon {
-    background-color: var(--accent-color, #0d6efd); 
-    color: #000;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900;
-    font-size: 16px;
-    border: 3px solid white; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-  }
-  .leaflet-popup-content-wrapper {
-    border-radius: 16px !important;
-    overflow: hidden;
-    padding: 0 !important;
-  }
-  .leaflet-popup-content {
-    margin: 0 !important;
-    width: 240px !important;
-  }
+  .custom-zenly-pin { background: transparent; border: none; }
+  .map-pin-container { display: flex; align-items: center; justify-content: center; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .map-pin-container:hover { transform: scale(1.15) translateY(-5px); z-index: 1000 !important; }
+  .pin-avatar { width: 45px; height: 45px; border-radius: 50%; border: 3px solid var(--accent-color, #17E0A0); box-shadow: 0 4px 12px rgba(0,0,0,0.4); object-fit: cover; background: #fff; }
+  .custom-cluster-icon { background-color: var(--accent-color, #0d6efd); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; border: 3px solid white; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+  .leaflet-popup-content-wrapper { border-radius: 16px !important; overflow: hidden; padding: 0 !important; }
+  .leaflet-popup-content { margin: 0 !important; width: 240px !important; }
   .leaflet-popup-tip { background: white; }
 `;
 
@@ -110,40 +74,31 @@ const cityCoordinates = {
   "Σκιάθος": [39.1623, 23.4909], "Σκόπελος": [39.1235, 23.7264]
 };
 
+
 const getImage = (act) => {
   if (act.image_url && act.image_url.length > 10) return act.image_url;
   return "https://picsum.photos/240/140";
 };
 
-// ρυθμίσεις χάρτη
 const DEFAULT_CENTER = [38.3, 22];
 const DEFAULT_ZOOM = 6;
 const SINGLE_ITEM_ZOOM = 11;
 const MAX_FIT_ZOOM = 14;
 const LARGE_AREA_LAT_DIFF_THRESHOLD = 2; 
 const FIT_PADDING = [50, 50];
+const OFFSET_LAT_STEP = 0.0004; const OFFSET_LAT_BASE = 0.0002;
+const OFFSET_LNG_STEP = 0.0004; const OFFSET_LNG_BASE = 0.0002;
 
-// offsets για να μην πέφτουν τα pins ακριβώς το ένα πάνω στο άλλο
-const OFFSET_LAT_STEP = 0.0004;
-const OFFSET_LAT_BASE = 0.0002;
-const OFFSET_LNG_STEP = 0.0004;
-const OFFSET_LNG_BASE = 0.0002;
-
-// δημιουργία custom pin με εικόνα
 const createZenlyIcon = (activity) => {
   return new L.DivIcon({
     className: "custom-zenly-pin",
-    html: `
-      <div class="map-pin-container">
-        <img src="${getImage(activity)}" class="pin-avatar" alt="pin" />
-      </div>
-    `,
+    html: `<div class="map-pin-container"><img src="${getImage(activity)}" class="pin-avatar" alt="pin" /></div>`,
     iconSize: [45, 45],
-    iconAnchor: [22, 22], // Κεντράρει τον κύκλο ακριβώς πάνω στη συντεταγμένη
-    popupAnchor: [0, -25], // Σηκώνει το popup πάνω από την εικόνα
+    iconAnchor: [22, 22], 
+    popupAnchor: [0, -25], 
   });
 };
-// δημιουργία cluster icon
+
 const createClusterIcon = (cluster) =>
   new L.DivIcon({
     html: `<span>${cluster.getChildCount()}</span>`,
@@ -151,17 +106,20 @@ const createClusterIcon = (cluster) =>
     iconSize: L.point(44, 44, true),
   });
 
-// component που ελέγχει δυναμικά το κέντρο και το zoom του χάρτη
 function MapController({ activities }) {
   const map = useMap();
 
   useEffect(() => {
     const points = activities
       .map((act) => {
+        // 1. Έλεγχος για ακριβείς συντεταγμένες (από Google API ή Βάση)
+        if (act.lat && act.lng) return [act.lat, act.lng];
+
+        // 2. Εναλλακτική: Fallback στον πίνακα cityCoordinates
         let pos = cityCoordinates[act.location];
         if (!pos) {
           const foundKey = Object.keys(cityCoordinates).find((k) =>
-            act.location.includes(k)
+            act.location && act.location.includes(k)
           );
           if (foundKey) pos = cityCoordinates[foundKey];
         }
@@ -194,32 +152,9 @@ function MapController({ activities }) {
   return null;
 }
 
-MapController.propTypes = {
-  activities: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-      title: PropTypes.string,
-      location: PropTypes.string,
-      cost: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-      image_url: PropTypes.string,
-    })
-  ).isRequired,
-};
-
 const ActivitiesMap = ({ activities }) => {
   return (
-    <MapContainer
-      center={DEFAULT_CENTER}
-      zoom={DEFAULT_ZOOM}
-      scrollWheelZoom
-      style={{
-        height: "100%",
-        width: "100%",
-        minHeight: "400px",
-        zIndex: 1,
-        borderRadius: "12px",
-      }}
-    >
+    <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} scrollWheelZoom style={{ height: "100%", width: "100%", minHeight: "400px", zIndex: 1, borderRadius: "12px" }}>
       <style>{mapStyles}</style>
       <MapController activities={activities} />
 
@@ -228,62 +163,50 @@ const ActivitiesMap = ({ activities }) => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      <MarkerClusterGroup
-        chunkedLoading
-        iconCreateFunction={createClusterIcon}
-        maxClusterRadius={45}
-        showCoverageOnHover={false}
-      >
+      <MarkerClusterGroup chunkedLoading iconCreateFunction={createClusterIcon} maxClusterRadius={45} showCoverageOnHover={false}>
         {activities.map((activity) => {
-          let position = cityCoordinates[activity.location];
-          if (!position) {
-            const foundKey = Object.keys(cityCoordinates).find((key) =>
-              activity.location.includes(key)
-            );
-            if (foundKey) position = cityCoordinates[foundKey];
+          let position;
+
+          // 1. Προτεραιότητα στις ακριβείς συντεταγμένες (π.χ. Google Places)
+          if (activity.lat && activity.lng) {
+              position = [activity.lat, activity.lng];
+          } else {
+              // 2. Fallback στον χειροκίνητο πίνακα
+              position = cityCoordinates[activity.location];
+              if (!position) {
+                const foundKey = Object.keys(cityCoordinates).find((key) =>
+                  activity.location && activity.location.includes(key)
+                );
+                if (foundKey) position = cityCoordinates[foundKey];
+              }
           }
 
           if (!position) return null;
 
-          // μαθηματικό offset για να μη στοιβάζονται τα pins
-          const offsetLat = (Number(activity.id) % 5) * OFFSET_LAT_STEP - OFFSET_LAT_BASE;
-          const offsetLng = (Number(activity.id) % 3) * OFFSET_LNG_STEP - OFFSET_LNG_BASE;
-          const finalPos = [position[0] + offsetLat, position[1] + offsetLng];
+          // μαθηματικό offset ΜΟΝΟ αν δεν έχουμε ακριβείς συντεταγμένες
+          const isExactLocation = activity.lat && activity.lng;
+          let finalPos = position;
+          
+          if (!isExactLocation) {
+              const offsetLat = (Number(activity.id) % 5) * OFFSET_LAT_STEP - OFFSET_LAT_BASE;
+              const offsetLng = (Number(activity.id) % 3) * OFFSET_LNG_STEP - OFFSET_LNG_BASE;
+              finalPos = [position[0] + offsetLat, position[1] + offsetLng];
+          }
 
           return (
             <Marker key={activity.id} position={finalPos} icon={createZenlyIcon(activity)}>
               <Popup closeButton={false}>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ position: "relative" }}>
-                    <img
-                      src={getImage(activity)}
-                      alt={activity.title}
-                      style={{
-                        width: "100%",
-                        height: "130px",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
+                    <img src={getImage(activity)} alt={activity.title} style={{ width: "100%", height: "130px", objectFit: "cover", display: "block" }} />
                     <span className="badge bg-dark bg-opacity-75 position-absolute bottom-0 end-0 m-2">
                       {Number(activity.cost) === 0 ? "Free" : `${activity.cost}€`}
                     </span>
                   </div>
-
                   <div className="p-3">
-                    <h6 style={{ fontWeight: 800, marginBottom: "5px", color: "#333" }}>
-                      {activity.title}
-                    </h6>
-                    <p className="text-muted small mb-3">
-                      <GeoAltFill className="me-1" />
-                      {(activity.location || "").split(",")[0]}
-                    </p>
-
-                    <Link
-                      to={`/activities/${activity.id}`}
-                      className="btn btn-primary w-100 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2"
-                      style={{ fontSize: "14px", padding: "8px 0" }}
-                    >
+                    <h6 style={{ fontWeight: 800, marginBottom: "5px", color: "#333" }}>{activity.title}</h6>
+                    <p className="text-muted small mb-3"><GeoAltFill className="me-1" />{(activity.location || "").split(",")[0]}</p>
+                    <Link to={`/activities/${activity.id}`} className="btn btn-primary w-100 rounded-pill fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" style={{ fontSize: "14px", padding: "8px 0" }}>
                       Δες περισσότερα <ArrowRightCircleFill />
                     </Link>
                   </div>
@@ -295,18 +218,6 @@ const ActivitiesMap = ({ activities }) => {
       </MarkerClusterGroup>
     </MapContainer>
   );
-};
-
-ActivitiesMap.propTypes = {
-  activities: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
-      title: PropTypes.string,
-      location: PropTypes.string,
-      cost: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-      image_url: PropTypes.string,
-    })
-  ).isRequired,
 };
 
 export default ActivitiesMap;
