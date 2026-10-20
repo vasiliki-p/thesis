@@ -80,7 +80,9 @@ export default function HomePage() {
                   <button className="btn btn-outline-secondary rounded-pill px-4" onClick={() => setShowDemoPopup(false)}>
                     Close
                   </button>
-                  <Link to="/login" className="btn rounded-pill px-4 fw-bold" style={{ background: 'var(--text-main)', color: 'var(--inverted-text)' }}>
+                  <Link to="/login" className="btn rounded-pill px-4 fw-bold"
+                  state={{ email: "demo@pyxis.com", password: "demo123" }}
+                  style={{ background: 'var(--text-main)', color: 'var(--inverted-text)' }}>
                     Log In Now
                   </Link>
                 </div>
